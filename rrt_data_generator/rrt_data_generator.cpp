@@ -52,7 +52,7 @@ void makeNewRRT() {
 
 int main()
 {
-	mDataFile.open("rrt_data.csv");
+	mDataFile.open("rrt_data.txt");
 	//set up headings
 	mHeadings.clear();
 	mHeadings.push_back("Start Loc X");
