@@ -89,7 +89,7 @@ int main()
 
 	for (int j = 0; j < mHeadings.size(); ++j) {
 		mDataTxtFile << mHeadings.at(j);
-		mDataTxtFile << mHeadings.at(j);
+		mDataCsvFile << mHeadings.at(j);
 		if (j != mHeadings.size() - 1) {
 			mDataCsvFile << ","; // No comma at end of line
 			mDataTxtFile << ","; // No comma at end of line
