@@ -55,16 +55,16 @@ int main()
 	mDataFile.open("rrt_data.txt");
 	//set up headings
 	mHeadings.clear();
-	mHeadings.push_back("Start Loc X");
-	mHeadings.push_back("Start Loc Y");
-	mHeadings.push_back("Goal Loc X");
-	mHeadings.push_back("Goal Loc Y");
+	mHeadings.push_back("\"Start Loc X\"");
+	mHeadings.push_back("\"Start Loc Y\"");
+	mHeadings.push_back("\"Goal Loc X\"");
+	mHeadings.push_back("\"Goal Loc Y\"");
 	for (int i = 0; i < mNumObstacles; i++) {
-		mHeadings.push_back("Obstacle " + to_string(i + 1) + " Loc X");
-		mHeadings.push_back("Obstacle " + to_string(i + 1) + " Loc Y");
-		mHeadings.push_back("Obstacle " + to_string(i + 1) + " Radius");
+		mHeadings.push_back("\"Obstacle " + to_string(i + 1) + " Loc X\"");
+		mHeadings.push_back("\"Obstacle " + to_string(i + 1) + " Loc Y\"");
+		mHeadings.push_back("\"Obstacle " + to_string(i + 1) + " Radius\"");
 	}
-	mHeadings.push_back("Length of Solution Path");
+	mHeadings.push_back("\"Length of Solution Path\"");
 	///TODO: decide how to represent solution path
 	/// string of numbers?
 	/// max number of points accepted, remove any data that goes above that max?
@@ -72,8 +72,8 @@ int main()
 	/// lets try max points first
 
 	for (int i = 0; i < mMaxNumSolutionPoints; i++) {
-		mHeadings.push_back("Solution Loc " + to_string(i + 1) + " X");
-		mHeadings.push_back("Solution Loc " + to_string(i + 1) + " Y");
+		mHeadings.push_back("\"Solution Loc " + to_string(i + 1) + " X\"");
+		mHeadings.push_back("\"Solution Loc " + to_string(i + 1) + " Y\"");
 	}
 
 	for (int j = 0; j < mHeadings.size(); ++j) {
