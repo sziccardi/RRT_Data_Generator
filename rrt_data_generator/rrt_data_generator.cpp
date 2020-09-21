@@ -46,8 +46,8 @@ void makeNewRRT() {
 	mDataCsvFile << solution.size() << ",";
 	for (int i = mMaxNumSolutionPoints - 1; i >= 0; i--) {
 		if (i < solution.size()) {
-			mDataTxtFile << solution.at(i).mX << "," << solution.at(i).mY;
-			mDataCsvFile << solution.at(i).mX << "," << solution.at(i).mY;
+			mDataTxtFile << solution.at(solution.size() - i - 1).mX << "," << solution.at(solution.size() - i - 1).mY;
+			mDataCsvFile << solution.at(solution.size() - i - 1).mX << "," << solution.at(solution.size() - i - 1).mY;
 		} else {
 			mDataTxtFile << randGoal.mX << "," << randGoal.mY;
 			mDataCsvFile << randGoal.mX << "," << randGoal.mY;
