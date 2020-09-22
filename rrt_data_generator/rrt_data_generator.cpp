@@ -21,7 +21,7 @@ int mNumObstacles = 1;
 float mMinObstacleRadius = 2.f;
 float mMaxObstacleRadius = 50.f;
 
-int mMaxNumSolutionPoints = 300;
+int mMaxNumSolutionPoints = 100;
 
 void makeNewRRT() {
 	vec2 randStart = vec2(0.f, rand() % (int)mConfSpaceHeight);
