@@ -42,9 +42,9 @@ void makeNewRRT() {
 		myRRT->addObstacle(randObstacle, radius);
 	}
 	auto solution = myRRT->start();
-	mDataTxtFile << solution.size() << ",";
-	mDataCsvFile << solution.size() << ",";
-	for (int i = mMaxNumSolutionPoints - 1; i >= 0; i--) {
+	//mDataTxtFile << solution.size() << ",";
+	//mDataCsvFile << solution.size() << ",";
+	/*for (int i = mMaxNumSolutionPoints - 1; i >= 0; i--) {
 		if (i < solution.size()) {
 			mDataTxtFile << solution.at(solution.size() - i - 1).mX << "," << solution.at(solution.size() - i - 1).mY;
 			mDataCsvFile << solution.at(solution.size() - i - 1).mX << "," << solution.at(solution.size() - i - 1).mY;
@@ -56,7 +56,45 @@ void makeNewRRT() {
 			mDataTxtFile << ",";
 			mDataCsvFile << ",";
 		}
+	}*/
+
+	float numSamples = (float)solution.size();
+	float xMean = 0.f;
+	float yMean = 0.f;
+	for (auto point : solution) {
+		xMean += point.mX;
+		yMean += point.mY;
 	}
+	xMean /= numSamples;
+	yMean /= numSamples;
+	mDataTxtFile << xMean << ",";
+	mDataCsvFile << xMean << ",";
+	mDataTxtFile << yMean << ",";
+	mDataCsvFile << yMean << ",";
+
+
+	float sXY = 0.f;
+	float sXX = 0.f;
+	float sYY = 0.f;
+	for (auto point : solution) {
+		float xVar = point.mX - xMean;
+		float yVar = point.mY - yMean;
+
+		sXY += (xVar * yVar);
+		sXX += (xVar * xVar);
+		sYY += (yVar * yVar);
+	}
+
+	sXY /= (numSamples - 1);
+	sXX /= (numSamples - 1);
+	sYY /= (numSamples - 1);
+
+	mDataTxtFile << sXX << ",";
+	mDataCsvFile << sXX << ",";
+	mDataTxtFile << sYY << ",";
+	mDataCsvFile << sYY << ",";
+	mDataTxtFile << sXY;
+	mDataCsvFile << sXY;
 }
 
 
@@ -75,17 +113,23 @@ int main()
 		mHeadings.push_back("\"Obstacle " + to_string(i + 1) + " Loc Y\"");
 		mHeadings.push_back("\"Obstacle " + to_string(i + 1) + " Radius\"");
 	}
-	mHeadings.push_back("\"Length of Solution Path\"");
+	//mHeadings.push_back("\"Length of Solution Path\"");
 	///TODO: decide how to represent solution path
 	/// string of numbers?
 	/// max number of points accepted, remove any data that goes above that max?
 	/// image?
 	/// lets try max points first
 
-	for (int i = 0; i < mMaxNumSolutionPoints; i++) {
+	/*for (int i = 0; i < mMaxNumSolutionPoints; i++) {
 		mHeadings.push_back("\"Solution Loc " + to_string(i + 1) + " X\"");
 		mHeadings.push_back("\"Solution Loc " + to_string(i + 1) + " Y\"");
-	}
+	}*/
+
+	mHeadings.push_back("\"Mean X\"");
+	mHeadings.push_back("\"Mean Y\"");
+	mHeadings.push_back("\"SXX\"");
+	mHeadings.push_back("\"SYY\"");
+	mHeadings.push_back("\"SXY\"");
 
 	for (int j = 0; j < mHeadings.size(); ++j) {
 		mDataTxtFile << mHeadings.at(j);
