@@ -15,7 +15,7 @@ vector<string> mHeadings;
 float mConfSpaceWidth = 600;
 float mConfSpaceHeight = 600;
 
-int mNumDataPoints = 2788; //max is 2788 apparently
+int mNumDataPoints = 5000; //max is 2788 apparently
 
 int mNumObstacles = 1;
 float mMinObstacleRadius = 2.f;
@@ -114,7 +114,7 @@ int main()
 	mDataCsvFile << endl;
 	mDataTxtFile << endl;
 
-	for (int i = 0; i < mNumDataPoints; i++) {
+	for (int i = 2788; i < mNumDataPoints; i++) {
 		cout << "making situation " << i << " : ";
 		makeNewRRT();
 		mDataCsvFile << endl;
