@@ -86,33 +86,33 @@ int main()
 	mDataTxtFile.open("rrt_data.txt", ios::app);
 	mDataCsvFile.open("rrt_data.csv", ios::app);
 	////set up headings
-	mHeadings.clear();
-	mHeadings.push_back("\"Start Loc X\"");
-	mHeadings.push_back("\"Start Loc Y\"");
-	mHeadings.push_back("\"Goal Loc X\"");
-	mHeadings.push_back("\"Goal Loc Y\"");
-	for (int i = 0; i < mNumObstacles; i++) {
-		mHeadings.push_back("\"Obstacle " + to_string(i + 1) + " Loc X\"");
-		mHeadings.push_back("\"Obstacle " + to_string(i + 1) + " Loc Y\"");
-		mHeadings.push_back("\"Obstacle " + to_string(i + 1) + " Radius\"");
-	}
+	//mHeadings.clear();
+	//mHeadings.push_back("\"Start Loc X\"");
+	//mHeadings.push_back("\"Start Loc Y\"");
+	//mHeadings.push_back("\"Goal Loc X\"");
+	//mHeadings.push_back("\"Goal Loc Y\"");
+	//for (int i = 0; i < mNumObstacles; i++) {
+	//	mHeadings.push_back("\"Obstacle " + to_string(i + 1) + " Loc X\"");
+	//	mHeadings.push_back("\"Obstacle " + to_string(i + 1) + " Loc Y\"");
+	//	mHeadings.push_back("\"Obstacle " + to_string(i + 1) + " Radius\"");
+	//}
 
-	mHeadings.push_back("\"Mean X\"");
-	mHeadings.push_back("\"Mean Y\"");
-	mHeadings.push_back("\"SXX\"");
-	mHeadings.push_back("\"SYY\"");
-	mHeadings.push_back("\"SXY\"");
+	//mHeadings.push_back("\"Mean X\"");
+	//mHeadings.push_back("\"Mean Y\"");
+	//mHeadings.push_back("\"SXX\"");
+	//mHeadings.push_back("\"SYY\"");
+	//mHeadings.push_back("\"SXY\"");
 
-	for (int j = 0; j < mHeadings.size(); ++j) {
-		mDataTxtFile << mHeadings.at(j);
-		mDataCsvFile << mHeadings.at(j);
-		if (j != mHeadings.size() - 1) {
-			mDataCsvFile << ","; // No comma at end of line
-			mDataTxtFile << ","; // No comma at end of line
-		}
-	}
-	mDataCsvFile << endl;
-	mDataTxtFile << endl;
+	//for (int j = 0; j < mHeadings.size(); ++j) {
+	//	mDataTxtFile << mHeadings.at(j);
+	//	mDataCsvFile << mHeadings.at(j);
+	//	if (j != mHeadings.size() - 1) {
+	//		mDataCsvFile << ","; // No comma at end of line
+	//		mDataTxtFile << ","; // No comma at end of line
+	//	}
+	//}
+	//mDataCsvFile << endl;
+	//mDataTxtFile << endl;
 
 	for (int i = 2788; i < mNumDataPoints; i++) {
 		cout << "making situation " << i << " : ";
