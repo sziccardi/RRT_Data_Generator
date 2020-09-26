@@ -6,6 +6,8 @@
 
 #include "build_rrt.cpp"
 
+#include <SDL.h>
+
 using namespace std;
 
 ofstream mDataTxtFile;
@@ -15,11 +17,11 @@ vector<string> mHeadings;
 float mConfSpaceWidth = 600;
 float mConfSpaceHeight = 600;
 
-int mNumDataPoints = 5000; //max is 2788 apparently
+int mNumDataPoints = 10000; //max is 2788 apparently
 
 int mNumObstacles = 1;
-float mMinObstacleRadius = 2.f;
-float mMaxObstacleRadius = 50.f;
+float mMinObstacleRadius = 20.f;
+float mMaxObstacleRadius = 200.f;
 
 void makeNewRRT() {
 	vec2 randStart = vec2(0.f, rand() % (int)mConfSpaceHeight);
@@ -80,12 +82,81 @@ void makeNewRRT() {
 	mDataCsvFile << sXY;
 }
 
+void testRRT() {
+	vec2 randStart = vec2(0.f, 120.f);
+	vec2 randGoal = vec2(600.f, 241.f);
+	
+	RRT* myRRT = new RRT(mConfSpaceWidth, mConfSpaceHeight, randStart, randGoal, 150);
 
-int main()
+	float radius = 12.f;
+	vec2 randObstacle = vec2(300.f, 30.f);
+		
+	myRRT->addObstacle(randObstacle, radius);
+	
+	auto solution = myRRT->start();
+
+	cout << "~*~ without dist ~*~" << endl;
+	cout << "tree size: " << myRRT->getNumNodes() << endl;
+	cout << "solution length: " << solution.size() << "\n" << endl;
+
+	myRRT->draw();
+
+	//float numSamples = (float)solution.size();
+	//float xMean = 0.f;
+	//float yMean = 0.f;
+	//for (auto point : solution) {
+	//	xMean += point.mX;
+	//	yMean += point.mY;
+	//}
+	//xMean /= numSamples;
+	//yMean /= numSamples;
+
+	//float sXY = 0.f;
+	//float sXX = 0.f;
+	//float sYY = 0.f;
+	//for (auto point : solution) {
+	//	float xVar = point.mX - xMean;
+	//	float yVar = point.mY - yMean;
+
+	//	sXY += (xVar * yVar);
+	//	sXX += (xVar * xVar);
+	//	sYY += (yVar * yVar);
+	//}
+
+	//sXY /= (numSamples - 1);
+	//sXX /= (numSamples - 1);
+	//sYY /= (numSamples - 1);
+
+	//cout << "( " << xMean << ", " << yMean << ", " << sXX << ", " << sYY << ", " << sXY << " )" << endl;
+}
+
+void sampleRRTOnDistribution() {
+	vec2 randStart = vec2(0.f, 120.f);
+	vec2 randGoal = vec2(600.f, 241.f);
+
+	RRT* myRRT = new RRT(mConfSpaceWidth, mConfSpaceHeight, randStart, randGoal, 150);
+
+	float radius = 12.f;
+	vec2 randObstacle = vec2(300.f, 30.f);
+
+	myRRT->addObstacle(randObstacle, radius);
+
+	auto solution = myRRT->start(vec2(410.0237, 214.7713), 54667.5859, 4950.5645, 4470.1230);
+
+	cout << "~*~ with dist ~*~" << endl;
+	cout << "tree size: " << myRRT->getNumNodes() << endl;
+	cout << "solution length: " << solution.size() << "\n" << endl;
+
+
+	myRRT->draw();
+}
+
+
+int main(int argc, char* argv[])
 {
 	mDataTxtFile.open("rrt_data.txt", ios::app);
 	mDataCsvFile.open("rrt_data.csv", ios::app);
-	////set up headings
+	//////set up headings
 	//mHeadings.clear();
 	//mHeadings.push_back("\"Start Loc X\"");
 	//mHeadings.push_back("\"Start Loc Y\"");
@@ -111,18 +182,20 @@ int main()
 	//		mDataTxtFile << ","; // No comma at end of line
 	//	}
 	//}
-	//mDataCsvFile << endl;
-	//mDataTxtFile << endl;
+	mDataCsvFile << endl;
+	mDataTxtFile << endl;
 
-	for (int i = 2788; i < mNumDataPoints; i++) {
+	for (int i = 9222; i < mNumDataPoints; i++) {
 		cout << "making situation " << i << " : ";
 		makeNewRRT();
 		mDataCsvFile << endl;
 		mDataTxtFile << endl;
 	}
-	
+	//testRRT();
+	//sampleRRTOnDistribution();
 
 	mDataCsvFile.close();
 	mDataTxtFile.close();
+
 	return 0;
 }

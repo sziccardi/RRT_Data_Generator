@@ -126,6 +126,8 @@ public:
 		myList.clear();
 	}
 
+	unordered_map<vec2, Node*> getList() { return myList; }
+
 	Node* getNode(vec2 pos) {
 		return myList.at(pos);
 	}
@@ -170,4 +172,6 @@ public:
 		}
 		return nearest;
 	}
+
+	int getTreeSize() { return myList.size(); }
 };
