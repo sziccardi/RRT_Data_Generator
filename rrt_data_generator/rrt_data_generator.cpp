@@ -17,11 +17,11 @@ vector<string> mHeadings;
 float mConfSpaceWidth = 600;
 float mConfSpaceHeight = 600;
 
-int mNumDataPoints = 10000; //max is 2788 apparently
+int mNumDataPoints = 2788; //max is 2788 apparently
 
-int mNumObstacles = 1;
-float mMinObstacleRadius = 20.f;
-float mMaxObstacleRadius = 200.f;
+int mNumObstacles = 4;
+float mMinObstacleRadius = 10.f;
+float mMaxObstacleRadius = 75.f;
 
 void makeNewRRT() {
 	vec2 randStart = vec2(0.f, rand() % (int)mConfSpaceHeight);
@@ -100,34 +100,6 @@ void testRRT() {
 	cout << "solution length: " << solution.size() << "\n" << endl;
 
 	myRRT->draw();
-
-	//float numSamples = (float)solution.size();
-	//float xMean = 0.f;
-	//float yMean = 0.f;
-	//for (auto point : solution) {
-	//	xMean += point.mX;
-	//	yMean += point.mY;
-	//}
-	//xMean /= numSamples;
-	//yMean /= numSamples;
-
-	//float sXY = 0.f;
-	//float sXX = 0.f;
-	//float sYY = 0.f;
-	//for (auto point : solution) {
-	//	float xVar = point.mX - xMean;
-	//	float yVar = point.mY - yMean;
-
-	//	sXY += (xVar * yVar);
-	//	sXX += (xVar * xVar);
-	//	sYY += (yVar * yVar);
-	//}
-
-	//sXY /= (numSamples - 1);
-	//sXX /= (numSamples - 1);
-	//sYY /= (numSamples - 1);
-
-	//cout << "( " << xMean << ", " << yMean << ", " << sXX << ", " << sYY << ", " << sXY << " )" << endl;
 }
 
 void sampleRRTOnDistribution() {
@@ -156,7 +128,7 @@ int main(int argc, char* argv[])
 {
 	mDataTxtFile.open("rrt_data.txt", ios::app);
 	mDataCsvFile.open("rrt_data.csv", ios::app);
-	//////set up headings
+	////set up headings
 	//mHeadings.clear();
 	//mHeadings.push_back("\"Start Loc X\"");
 	//mHeadings.push_back("\"Start Loc Y\"");
@@ -185,7 +157,7 @@ int main(int argc, char* argv[])
 	mDataCsvFile << endl;
 	mDataTxtFile << endl;
 
-	for (int i = 9222; i < mNumDataPoints; i++) {
+	for (int i = 1920; i < mNumDataPoints; i++) {
 		cout << "making situation " << i << " : ";
 		makeNewRRT();
 		mDataCsvFile << endl;
