@@ -7,6 +7,7 @@
 #include <objidl.h>
 
 #include "data_utils.cpp"
+#include "matrices.h"
 
 #include <SDL.h>
 
@@ -18,7 +19,7 @@ public:
 	Framework(int height_, int width_) : height(height_), width(width_) {
 		SDL_Init(SDL_INIT_VIDEO);       // Initializing SDL as Video
 		SDL_CreateWindowAndRenderer(width, height, 0, &window, &renderer);
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);      // setting draw color
+		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);      // setting draw color
 		SDL_RenderClear(renderer);      // Clear the newly created window
 		SDL_RenderPresent(renderer);    // Reflects the changes done in the
 										//  window.
@@ -31,9 +32,9 @@ public:
 		SDL_Quit();
 	}
 
-	void draw_circle(int center_x, int center_y, int radius_) {
+	void draw_circle(int center_x, int center_y, int radius_, Vec3 color) {
 		// Setting the color to be RED with 100% opaque (0% trasparent).
-		SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+		SDL_SetRenderDrawColor(renderer, color.x(), color.y(), color.z(), 255);
 
 		// Drawing circle
 		for (int x = center_x - radius_; x <= center_x + radius_; x++) {
@@ -50,7 +51,7 @@ public:
 
 	void draw_tree(Tree* myTree) {
 		//draw tree
-		SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
+		SDL_SetRenderDrawColor(renderer, 0.f, 0.f, 0.f, 175);
 
 		auto myList = myTree->getList();
 		for (auto realPair : myList) {
@@ -139,11 +140,11 @@ public:
 		//draw the tree
 		fw.draw_tree(myTree);
 		// Calling the function that draws circle.
-		fw.draw_circle(mInitPos.mX, mInitPos.mY, 5);
-		fw.draw_circle(mGoalPos.mX, mGoalPos.mY, 5);
+		fw.draw_circle(mInitPos.mX, mInitPos.mY, 5, Vec3(255.f, 0.f, 0.f));
+		fw.draw_circle(mGoalPos.mX, mGoalPos.mY, 5, Vec3(255.f, 0.f, 0.f));
 
 		for (auto obs : mObstacles) {
-			fw.draw_circle(obs.first.mX, obs.first.mY, obs.second);
+			fw.draw_circle(obs.first.mX, obs.first.mY, obs.second, Vec3(0.f, 0.f, 255.f));
 		}
 
 		//draw solution
