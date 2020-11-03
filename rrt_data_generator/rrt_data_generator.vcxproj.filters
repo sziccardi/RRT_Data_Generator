@@ -32,6 +32,15 @@
     <ClInclude Include="matrices.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\eigenmvn\eigenmvn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="build_rrt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rrt_data_generator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="SDL2.lib" />

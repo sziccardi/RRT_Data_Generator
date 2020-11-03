@@ -1,292 +1,208 @@
-#include <cmath>
-#include <vector>
-#include <iostream>
-#include <random>
-#include <iomanip>
+#include "build_rrt.h"
 
-#include <objidl.h>
+RRT::RRT() { initEnvironment(); }
 
-#include "data_utils.cpp"
-#include "matrices.h"
+RRT::RRT(int confWidth, int confHeight, Vec2 startPos, Vec2 goalPos, int numVerts) {
+	mWidth = confWidth;
+	mHeight = confHeight;
 
-#include <SDL.h>
+	mInitPos = startPos;
+	mGoalPos = goalPos;
 
-using namespace std;
+	mNumVertices = numVerts;
+	initEnvironment();
+	return;
+}
 
-class Framework {
-public:
-	// Contructor which initialize the parameters.
-	Framework(int height_, int width_) : height(height_), width(width_) {
-		SDL_Init(SDL_INIT_VIDEO);       // Initializing SDL as Video
-		SDL_CreateWindowAndRenderer(width, height, 0, &window, &renderer);
-		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);      // setting draw color
-		SDL_RenderClear(renderer);      // Clear the newly created window
-		SDL_RenderPresent(renderer);    // Reflects the changes done in the
-										//  window.
-	}
+Vec2 RRT::getInitPos() { return mInitPos; }
+void RRT::setInitPos(Vec2 initPos) { mInitPos = initPos; }
 
-	// Destructor
-	~Framework() {
-		SDL_DestroyRenderer(renderer);
-		SDL_DestroyWindow(window);
-		SDL_Quit();
-	}
+Vec2 RRT::getGoalPos() { return mGoalPos; }
+void RRT::setGoalPos(Vec2 goalPos) { mGoalPos = goalPos; }
 
-	void draw_circle(int center_x, int center_y, int radius_, Vec3 color) {
-		// Setting the color to be RED with 100% opaque (0% trasparent).
-		SDL_SetRenderDrawColor(renderer, color.x(), color.y(), color.z(), 255);
+float RRT::getConfWidth() { return mWidth; }
+float RRT::getConfHeight() { return mHeight; }
+void RRT::setConfSize(float width, float height) { mWidth = width; mHeight = height; }
 
-		// Drawing circle
-		for (int x = center_x - radius_; x <= center_x + radius_; x++) {
-			for (int y = center_y - radius_; y <= center_y + radius_; y++) {
-				if ((std::pow(center_y - y, 2) + std::pow(center_x - x, 2)) <=
-					std::pow(radius_, 2)) {
-					SDL_RenderDrawPoint(renderer, x, y);
-				}
-			}
-		}
-
-		// Show the change on the screen
-	}
-
-	void draw_tree(Tree* myTree) {
-		//draw tree
-		SDL_SetRenderDrawColor(renderer, 0.f, 0.f, 0.f, 175);
-
-		auto myList = myTree->getList();
-		for (auto realPair : myList) {
-			for (Node* connectedNode : (realPair.second)->mConnectedNodes) {
-				SDL_RenderDrawLine(renderer, realPair.first.mX, realPair.first.mY, connectedNode->mPosition.mX, connectedNode->mPosition.mY);
-			}
-		}
-
-		
-	}
-
-	void draw_solution(vector<vec2> solution) {
-		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-		vec2 prevPoint = vec2(-1, -1);
-		for (auto val : solution) {
-			if (prevPoint.mX >= 0) {
-				SDL_RenderDrawLine(renderer, prevPoint.mX, prevPoint.mY, val.mX, val.mY);
-			} 
-			prevPoint = val;
-		}
-	}
-
-	void present_render() {
-		SDL_RenderPresent(renderer);
-	}
-
-private:
-	int height;     // Height of the window
-	int width;      // Width of the window
-	SDL_Renderer* renderer = NULL;      // Pointer for the renderer
-	SDL_Window* window = NULL;      // Pointer for the window
-};
-
-class RRT {
-public:
-	bool mUseDist = false;
-
-	RRT() { initEnvironment(); }
-
-	RRT(int confWidth, int confHeight, vec2 startPos, vec2 goalPos, int numVerts) {
-		mWidth = confWidth;
-		mHeight = confHeight;
-
-		mInitPos = startPos;
-		mGoalPos = goalPos;
-
-		mNumVertices = numVerts;
-		initEnvironment();
-		return;
-	}
-
-	vec2 getInitPos() { return mInitPos; }
-	void setInitPos(vec2 initPos) { mInitPos = initPos; }
-
-	vec2 getGoalPos() { return mGoalPos; }
-	void setGoalPos(vec2 goalPos) { mGoalPos = goalPos; }
-
-	float getConfWidth() { return mWidth; }
-	float getConfHeight() { return mHeight; }
-	void setConfSize(float width, float height) { mWidth = width; mHeight = height; }
-
-	int getNumVertices() { return mNumVertices; }
-	void setNumVertices(int numVerts) { mNumVertices = numVerts; }
+int RRT::getNumVertices() { return mNumVertices; }
+void RRT::setNumVertices(int numVerts) { mNumVertices = numVerts; }
 	
-	int getNumNodes() { return myTree->getTreeSize(); }
+int RRT::getNumNodes() { return myTree->getTreeSize(); }
+int RRT::getIsSuccessful() { return (mSolutionPath.size() > 0); }
 
-	void addObstacle(vec2 pos, float radius) {
-		mObstacles.push_back(make_pair(pos, radius));
-	}
+void RRT::addObstacle(Vec2 pos, float radius) {
+	mObstacles.push_back(make_pair(pos, radius));
+}
 
-	vector<vec2> start() {
-		letsBuildRRT();
-		return mSolutionPath;
-	}
+vector<Vec2> RRT::start() {
+	letsBuildRRT();
+	return mSolutionPath;
+}
 
-	vector<vec2> start(vec2 means, float sxx, float syy, float sxy) {
-		letsBuildRRT(means, sxx, syy, sxy);
-		return mSolutionPath;
-	}
+vector<Vec2> RRT::start(Vec2 means, float sxx, float syy, float sxy) {
+	letsBuildRRTOnDist(means, sxx, syy, sxy);
+	return mSolutionPath;
+}
 
-	void draw() {
+void RRT::draw(Framework* fw, Vec3 color, bool drawObs) {
 
-		// Creating the object by passing Height and Width value.
-		Framework fw(600, 600);
-
-		//draw the tree
-		fw.draw_tree(myTree);
-		// Calling the function that draws circle.
-		fw.draw_circle(mInitPos.mX, mInitPos.mY, 5, Vec3(255.f, 0.f, 0.f));
-		fw.draw_circle(mGoalPos.mX, mGoalPos.mY, 5, Vec3(255.f, 0.f, 0.f));
+	//draw the tree
+	fw->draw_tree(myTree, color);
+	// Calling the function that draws circle.
+	if (drawObs) {
+		fw->draw_circle(mInitPos.x(), mInitPos.y(), 5, Vec3(255.f, 0.f, 0.f));
+		fw->draw_circle(mGoalPos.x(), mGoalPos.y(), 5, Vec3(255.f, 0.f, 0.f));
 
 		for (auto obs : mObstacles) {
-			fw.draw_circle(obs.first.mX, obs.first.mY, obs.second, Vec3(0.f, 0.f, 255.f));
+			fw->draw_circle(obs.first.x(), obs.first.y(), obs.second, Vec3(0.f, 0.f, 255.f));
+		}
+	}
+	//draw solution
+	fw->draw_solution(mSolutionPath);
+}
+
+Vec2 RRT::randConfEven() {
+	float randX = rand() % mWidth;
+	float randY = rand() % mHeight;
+	Vec2 myPos = Vec2(randX, randY);
+	return myPos;
+}
+
+Vec2 RRT::randConfDist(Vec2 means, float sxx, float syy, float sxy) {
+	/*normal_distribution<> dx{ means.x(), sxx };
+	normal_distribution<> dy{ means.y(), syy };
+	random_device rd{};
+	mt19937 gen{ rd() };
+
+	float a = dx(gen);
+	float b = dy(gen);
+	Eigen::VectorXd v(2);
+	v(0) = a;
+	v(1) = b;
+	Eigen::MatrixXd A(2, 2);
+	A(0, 0) = sxx;
+	A(0, 1) = sxy;
+	A(1, 0) = sxy;
+	A(1, 1) = syy;
+	Eigen::MatrixXd L(A.llt().matrixL());
+	Eigen::MatrixXd S = A.sqrt();
+	Eigen::VectorXd solution = L * v;
+	Eigen::VectorXd solution1 = S * v;
+	Vec2 sample = Vec2(solution(0), solution(1));
+	Vec2 sample1 = Vec2(solution1(0), solution1(1));
+	sample = sample + means;
+
+	return sample;*/
+	normal_distribution<> dx{ means.x(), sxx };
+	normal_distribution<> dy{ means.y(), syy };
+	random_device rd{};
+	mt19937 gen{ rd() };
+
+	float a = dx(gen);
+	float b = dy(gen);
+	Vec2 sample = Vec2(a * sxx + b * sxy, a * sxy + b * syy);
+	sample = toVec2(sample + means);
+
+	return sample;
+}
+
+//Vec2 nearestPixel(Vec2 rand) {
+//  //loop through all points in the graph and find the one closest to the rand pos
+//  Vec2 myPos = myTree.getNearestPoint(rand);
+
+//  return myPos;
+//}
+
+Node* RRT::nearestNode(Vec2 rand) {
+	//loop through all points in the graph and find the one closest to the rand pos
+	auto myNode = myTree->getNearestNode(rand);
+
+	return myNode;
+}
+
+Vec2 RRT::newConf(Vec2 nearby, Vec2 rand) {
+	//the new point is as far along the near-rand vector as you can
+	//if we cant step that way at all, return a failed value (-1, -1)
+
+	//is it the same point?
+	Vec2 diffVec = toVec2(rand - nearby);
+	if (diffVec.length() <= 1.0) {
+		return Vec2(-1.0, -1.0);
+	}
+
+	// parameterization
+	// circle: (x - center.x)^2 + (y - center.y)^2 = r^2
+	// line: x = diffVec.x() * t + near.x()
+	// line: y = diffVec.y() * t + near.y()
+	// min possible t = 0 max possible t  = 1 for segment
+	float tMin = 1;
+	for (auto obstacle : mObstacles) {
+		//what if the segment starts in the obstacle?
+		if (toVec(obstacle.first - nearby).length() <= obstacle.second) {
+			return Vec2(-1.0, -1.0);
 		}
 
-		//draw solution
-		fw.draw_solution(mSolutionPath);
-		//show
-		fw.present_render();
+		float a = diffVec.length() * diffVec.length();
+		float b = -2 * toVec(obstacle.first - nearby).dot(diffVec);
+		float c = toVec(nearby - obstacle.first).length() * toVec(nearby - obstacle.first).length() - obstacle.second * obstacle.second;
 
+		float d = b * b - 4 * a * c;
+		if (d > 0.0) {
+			//intersections possible
+			float tPlus = (-b + sqrt(d)) / (2 * a);
+			float tMinus = (-b - sqrt(d)) / (2 * a);
+
+			if (tPlus <= 1 && tPlus >= 0) {
+				//real intersection! 
+				if (tPlus < tMin) {
+					tMin = tPlus;
+				}
+			}
+
+			if (tMinus <= 1 && tMinus >= 0) {
+				//real intersection! 
+				if (tMinus < tMin) {
+					tMin = tMinus;
+				}
+			}
+		}
+	}
+
+	auto res = (diffVec * tMin) + nearby;
+	return toVec2(res);
+}
+
+void RRT::letsBuildRRT() {
+	Node* newNode = new Node(mInitPos, nullptr);
+	int count = 0;
+	while (toVec(mGoalPos - newNode->mPosition).length() > 10.f) {
+		if (count > mCountMax) break;
+		count++;
+
+		Vec2 randPos = Vec2(-1, -1);
+		if (rand() % 100 < 10) {
+			randPos = mGoalPos;
+		} else {
+			randPos = randConfEven();
+		}
 		
+		Node* nearNode = nearestNode(randPos);
+		Vec2 tempNewPos = newConf(nearNode->mPosition, randPos);
 
-		SDL_Event event = SDL_Event();    // Event variable
-
-		// Below while loop checks if the window has terminated using close in the
-		//  corner.
-		while (!(event.type == SDL_QUIT)) {
-			SDL_Delay(10);  // setting some Delay
-			SDL_PollEvent(&event);  // Catching the poll event.
+		if (tempNewPos.x() > 0) {
+			newNode = new Node(tempNewPos, nearNode);
+			myTree->addVertex(newNode);
+			myTree->addEdge(nearNode, newNode);
 		}
-
 	}
-
-private:
-	int mNumVertices = 154;
-	Tree* myTree;
-	vector<vec2> mSolutionPath;
-	vec2 mInitPos = vec2(-1.0, -1.0);
-	vec2 mGoalPos = vec2(-1.0, -1.0);
-	vector<pair<vec2, float>> mObstacles;
-	float dq = 10;
-	int mWidth = 0;
-	int mHeight = 0;
-
-	vec2 randConfEven() {
-		float randX = rand() % mWidth;
-		float randY = rand() % mHeight;
-		vec2 myPos = vec2(randX, randY);
-		return myPos;
+	mSolutionPath.clear();
+	if (count > mCountMax) {
+		cout << "Couldn't find a solution... So saaaad" << endl;
 	}
-
-	vec2 randConfDist(vec2 means = vec2(-1, -1), float sxx = -1, float syy = -1, float sxy = -1) {
-		normal_distribution<> dx{ means.mX, sxx };
-		normal_distribution<> dy{ means.mY, syy };
-		random_device rd{};
-		mt19937 gen{ rd() };
-
-		float a = dx(gen);
-		float b = dy(gen);
-		vec2 sample = vec2(a*sxx + b*sxy, a*sxy + b*syy);
-		sample = sample + means;
-
-		return sample;
-	}
-
-	//vec2 nearestPixel(vec2 rand) {
-	//  //loop through all points in the graph and find the one closest to the rand pos
-	//  vec2 myPos = myTree.getNearestPoint(rand);
-
-	//  return myPos;
-	//}
-
-	Node* nearestNode(vec2 rand) {
-		//loop through all points in the graph and find the one closest to the rand pos
-		auto myNode = myTree->getNearestNode(rand);
-
-		return myNode;
-	}
-
-	vec2 newConf(vec2 nearby, vec2 rand) {
-		//the new point is as far along the near-rand vector as you can
-		//if we cant step that way at all, return a failed value (-1, -1)
-
-		//is it the same point?
-		vec2 diffVec = (rand - nearby);
-		if (diffVec.vecLength() <= 1.0) {
-			return vec2(-1.0, -1.0);
-		}
-
-		// parameterization
-		// circle: (x - center.x)^2 + (y - center.y)^2 = r^2
-		// line: x = diffVec.mX * t + near.mX
-		// line: y = diffVec.mY * t + near.mY
-		// min possible t = 0 max possible t  = 1 for segment
-		float tMin = 1;
-		for (auto obstacle : mObstacles) {
-			//what if the segment starts in the obstacle?
-			if ((obstacle.first - nearby).vecLength() <= obstacle.second) {
-				return vec2(-1.0, -1.0);
-			}
-
-			float a = diffVec.vecLength() * diffVec.vecLength();
-			float b = -2 * (obstacle.first - nearby).dotProduct(diffVec);
-			float c = (nearby - obstacle.first).vecLength() * (nearby - obstacle.first).vecLength() - obstacle.second * obstacle.second;
-
-			float d = b * b - 4 * a * c;
-			if (d > 0.0) {
-				//intersections possible
-				float tPlus = (-b + sqrt(d)) / (2 * a);
-				float tMinus = (-b - sqrt(d)) / (2 * a);
-
-				if (tPlus <= 1 && tPlus >= 0) {
-					//real intersection! 
-					if (tPlus < tMin) {
-						tMin = tPlus;
-					}
-				}
-
-				if (tMinus <= 1 && tMinus >= 0) {
-					//real intersection! 
-					if (tMinus < tMin) {
-						tMin = tMinus;
-					}
-				}
-			}
-		}
-
-		auto res = (diffVec * tMin) + nearby;
-		return (res);
-	}
-
-	void letsBuildRRT(vec2 means = vec2(-1, -1), float sxx = -1, float syy = -1, float sxy = -1) {
-		Node* newNode = new Node(mInitPos, nullptr);
-		while ((mGoalPos - newNode->mPosition).vecLength() > 10.f) {
-			vec2 randPos = vec2(-1, -1);
-			if (mUseDist) {
-				randPos = randConfDist(means, sxx, syy, sxy);
-			}
-			else {
-				randPos = randConfEven();
-			}
-
-			Node* nearNode = nearestNode(randPos);
-			vec2 tempNewPos = newConf(nearNode->mPosition, randPos);
-
-			if (tempNewPos.mX > 0) {
-				newNode = new Node(tempNewPos, nearNode);
-				myTree->addVertex(newNode);
-				myTree->addEdge(nearNode, newNode);
-			}
-		}
+	else {
 		cout << "Found a solution! Yay go you!" << endl;
-		mSolutionPath.clear();
 		mSolutionPath.push_back(newNode->mPosition);
-		while (abs(newNode->mPosition.mX - mInitPos.mX) > 1.0 || abs(newNode->mPosition.mY - mInitPos.mY) > 1.0) {
+		while (abs(newNode->mPosition.x() - mInitPos.x()) > 1.0 || abs(newNode->mPosition.y() - mInitPos.y()) > 1.0) {
 			if (newNode->mParent == nullptr) {
 				break;
 			}
@@ -294,91 +210,145 @@ private:
 			mSolutionPath.push_back(newNode->mPosition);
 		}
 	}
+}
 
-	/*void drawSolutionPath() {
-		vec2 oldPos = vec2(-1.0, -1.0);
-		for (Node* node : mSolutionPath) {
-			if (oldPos.mX > 0) {
-				fill(255, 0, 0);
-				strokeWeight(5);
-				line(oldPos.mX, oldPos.mY, pos.mPosition.mX, pos.mPosition.mY);
+void RRT::letsBuildRRTOnDist(Vec2 means, float sxx, float syy, float sxy) {
+	Node* newNode = new Node(mInitPos, nullptr);
+	bool useDist = (means.x() > 0 && means.y() > 0);
+	Eigen::Vector2f mean(2);
+	mean(0) = means.x();
+	mean(1) = means.y();
+	Eigen::Matrix2f covar(2, 2);
+	covar(0, 0) = sxx;
+	covar(0, 1) = sxy;
+	covar(1, 0) = sxy;
+	covar(1, 1) = syy;
+	Eigen::EigenMultivariateNormal<float> normX_solver1(mean, covar);
+	int count = 0;
+	while (toVec(mGoalPos - newNode->mPosition).length() > 10.f) {
+
+		if (count > mCountMax) break;
+		count++;
+
+		Vec2 randPos = Vec2(-1, -1);
+		if (means.x() > 0 && means.y() > 0) {
+			if (rand() % 100 < 10) {
+				randPos = mGoalPos;
+			} else {
+				auto sample = normX_solver1.samples(1);
+				randPos = Vec2(sample(0, 0), sample(1, 0));
 			}
-			oldPos = node->mPosition;
+			//cout << "chose " << randPos.x() << ", " << randPos.y() << endl;
 		}
-		line(oldPos.mX, oldPos.mY, mInitPos.mX, mInitPos.mY);
-		strokeWeight(1);
-	}*/
 
-	/*void drawObstacles() {
-		for (vec2 obstacle : mObstacles) {
-			fill(255, 50);
-			ellipse(obstacle.mX, obstacle.mY, mObstacleRadius * 2, mObstacleRadius * 2);
-		}
-	}*/
+		Node* nearNode = nearestNode(randPos);
+		Vec2 tempNewPos = newConf(nearNode->mPosition, randPos);
 
-	void initEnvironment() {
-		//mInitPos = new vec2(0.0, height / 2.0);
-		//mGoalPos = new vec2(width / 1.0, height / 2.0);
-		Node* initNode = new Node(mInitPos, nullptr);
-		if (myTree) {
-			auto t = myTree;
-			delete(t);
-			myTree = nullptr;
+		if (tempNewPos.x() > 0) {
+			newNode = new Node(tempNewPos, nearNode);
+			myTree->addVertex(newNode);
+			myTree->addEdge(nearNode, newNode);
 		}
-		myTree = new Tree();
-		myTree->addVertex(initNode);
-		/*vec2 randPos; = randConf();
-		vec2 newPos = vec2(-1.0, -1.0);
-		while (newPos.mX < 0) {
-			newPos = newConf(mInitPos, randPos);
-		}
-		Node* newNode = new Node(newPos, initNode);
-		myTree->addVertex(newNode);
-		myTree->addEdge(initNode, newNode);*/
 	}
+	mSolutionPath.clear();
+	if (count > mCountMax) {
+		cout << "Couldn't find a solution... So saaaad" << endl;
+	} else {
+		cout << "Found a solution! Yay go you!" << endl;
+		mSolutionPath.push_back(newNode->mPosition);
+		while (abs(newNode->mPosition.x() - mInitPos.x()) > 1.0 || abs(newNode->mPosition.y() - mInitPos.y()) > 1.0) {
+			if (newNode->mParent == nullptr) {
+				break;
+			}
+			newNode = newNode->mParent;
+			mSolutionPath.push_back(newNode->mPosition);
+		}
+	}
+}
 
-	//void draw() {
-	//	background(51);
+/*void drawSolutionPath() {
+	Vec2 oldPos = Vec2(-1.0, -1.0);
+	for (Node* node : mSolutionPath) {
+		if (oldPos.x() > 0) {
+			fill(255, 0, 0);
+			strokeWeight(5);
+			line(oldPos.x(), oldPos.y(), pos.mPosition.x(), pos.mPosition.y());
+		}
+		oldPos = node->mPosition;
+	}
+	line(oldPos.x(), oldPos.y(), mInitPos.x(), mInitPos.y());
+	strokeWeight(1);
+}*/
 
-	//	//draw start button
-	//	fill(0);
-	//	rect(20, 20, 20, 20);
+/*void drawObstacles() {
+	for (Vec2 obstacle : mObstacles) {
+		fill(255, 50);
+		ellipse(obstacle.x(), obstacle.y(), mObstacleRadius * 2, mObstacleRadius * 2);
+	}
+}*/
 
-	//	if (mInitPos.mX >= 0) {
-	//		//draw start place
-	//		fill(255, 0, 0);
-	//		ellipse(mInitPos.mX, mInitPos.mY, 15, 15);
-	//	}
-	//	if (mGoalPos.mX >= 0) {
-	//		//draw end place
-	//		fill(255, 0, 0);
-	//		ellipse(mGoalPos.mX, mGoalPos.mY, 15, 15);
-	//	}
-	//	myTree.drawTree();
-	//	drawObstacles();
-	//	drawSolutionPath();
-	//}
+void RRT::initEnvironment() {
+	//mInitPos = new Vec2(0.0, height / 2.0);
+	//mGoalPos = new Vec2(width / 1.0, height / 2.0);
+	Node* initNode = new Node(mInitPos, nullptr);
+	if (myTree) {
+		auto t = myTree;
+		delete(t);
+		myTree = nullptr;
+	}
+	myTree = new Tree();
+	myTree->addVertex(initNode);
+	/*Vec2 randPos; = randConf();
+	Vec2 newPos = Vec2(-1.0, -1.0);
+	while (newPos.x() < 0) {
+		newPos = newConf(mInitPos, randPos);
+	}
+	Node* newNode = new Node(newPos, initNode);
+	myTree->addVertex(newNode);
+	myTree->addEdge(initNode, newNode);*/
+}
 
-	//void mouseClicked() {
-	//	if (mouseX > 20 && mouseX < 40 && mouseY > 20 && mouseY < 40) {
-	//		print("STARTING\n");
-	//		initEnvironment();
-	//		letsBuildRRT();
-	//	} else {
-	//		//place obstacles 
-	//		print("PLACING OBSTACLE\n");
-	//		vec2 newThing = new vec2((float)mouseX, (float)mouseY);
-	//		boolean canPlace = true;
-	//		for (vec2 obstacle : mObstacles) {
-	//			if ((newThing.vecSubtract(obstacle)).vecvecLength() < 2) {
-	//				canPlace = false;
-	//				break;
-	//			}
-	//		}
-	//		if (canPlace) {
-	//			mObstacles.add(newThing);
-	//		}
-	//	}
-	//}
-};
+//void draw() {
+//	background(51);
+
+//	//draw start button
+//	fill(0);
+//	rect(20, 20, 20, 20);
+
+//	if (mInitPos.x() >= 0) {
+//		//draw start place
+//		fill(255, 0, 0);
+//		ellipse(mInitPos.x(), mInitPos.y(), 15, 15);
+//	}
+//	if (mGoalPos.x() >= 0) {
+//		//draw end place
+//		fill(255, 0, 0);
+//		ellipse(mGoalPos.x(), mGoalPos.y(), 15, 15);
+//	}
+//	myTree.drawTree();
+//	drawObstacles();
+//	drawSolutionPath();
+//}
+
+//void mouseClicked() {
+//	if (mouseX > 20 && mouseX < 40 && mouseY > 20 && mouseY < 40) {
+//		print("STARTING\n");
+//		initEnvironment();
+//		letsBuildRRT();
+//	} else {
+//		//place obstacles 
+//		print("PLACING OBSTACLE\n");
+//		Vec2 newThing = new Vec2((float)mouseX, (float)mouseY);
+//		boolean canPlace = true;
+//		for (Vec2 obstacle : mObstacles) {
+//			if ((newThing.vecSubtract(obstacle)).veclength() < 2) {
+//				canPlace = false;
+//				break;
+//			}
+//		}
+//		if (canPlace) {
+//			mObstacles.add(newThing);
+//		}
+//	}
+//}
 
