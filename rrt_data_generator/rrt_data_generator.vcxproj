@@ -154,6 +154,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\eigenmvn\eigenmvn.h" />
     <ClInclude Include="build_rrt.h" />
+    <ClInclude Include="data_utils.h" />
     <ClInclude Include="matrices.h" />
     <ClInclude Include="rrt_data_generator.h" />
   </ItemGroup>

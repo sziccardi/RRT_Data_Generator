@@ -7,7 +7,7 @@
 
 #include <objidl.h>
 
-#include "data_utils.cpp"
+#include "data_utils.h"
 
 using namespace std;
 
@@ -37,7 +37,7 @@ public:
 
 	vector<Vec2> start(Vec2 means, float sxx, float syy, float sxy);
 
-	void draw(Framework* fw, Vec3 color, bool drawObs);
+	void draw(Framework* fw, Vec3 solutionColor, Vec3 treeColor, bool drawObs, bool drawDist = false, Vec3 distColor = Vec3(-1.f, -1.f, -1.f), Vec2 means = Vec2(-1.f, -1.f), float sxx = -1.f, float syy = -1.f, float sxy = -1.f);
 
 	bool mUseDist = false;
 	int mCountMax = 10000;

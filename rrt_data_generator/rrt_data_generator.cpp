@@ -90,7 +90,7 @@ pair<int, float> testRRT(Framework* fw, Vec2 randStart, Vec2 randGoal, Vec2 obs1
 		mDataResultFile << to_string(totalDist) << ",";
 
 		if (draw) {
-			myRRT->draw(fw, Vec3(0.f, 0.f, 0.f), true);
+			myRRT->draw(fw, Vec3(0.f, 1.f, 0.f), Vec3(0.f, 1.f, 1.f), true);
 		}
 
 		//TODO:write solution size to file
@@ -123,10 +123,10 @@ pair<int, float> sampleRRTOnDistribution(Framework* fw, Vec2 randStart, Vec2 ran
 	bool successful = myRRT->getIsSuccessful();
 	mDataResultFile << successful << ",";
 	if (!successful) {
-		myRRT->draw(fw, Vec3(1.0f, 0.f, 1.f), false);
+		myRRT->draw(fw, Vec3(1.0f, 0.f, 1.f), Vec3(0.5f, 0.f, 1.f), false, true, Vec3(1.f, 0.f, 0.f), means, xVar, yVar, xyVar);
 	}
 	else if (draw) {
-		myRRT->draw(fw, Vec3(1.0f, 0.f, 1.f), false);
+		myRRT->draw(fw, Vec3(1.0f, 0.f, 1.f), Vec3(0.5f, 0.f, 1.f), false, true, Vec3(1.f, 0.f, 0.f), means, xVar, yVar, xyVar);
 	}
 	//TODO:write solution size to file
 	if (!myRRT->getIsSuccessful()) numNodes = -1;

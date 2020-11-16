@@ -44,10 +44,10 @@ vector<Vec2> RRT::start(Vec2 means, float sxx, float syy, float sxy) {
 	return mSolutionPath;
 }
 
-void RRT::draw(Framework* fw, Vec3 color, bool drawObs) {
+void RRT::draw(Framework* fw, Vec3 solutionColor, Vec3 treeColor, bool drawObs, bool drawDist, Vec3 distColor, Vec2 means, float sxx, float syy, float sxy) {
 
 	//draw the tree
-	fw->draw_tree(myTree, color);
+	fw->draw_tree(myTree, treeColor);
 	// Calling the function that draws circle.
 	if (drawObs) {
 		fw->draw_circle(mInitPos.x(), mInitPos.y(), 5, Vec3(255.f, 0.f, 0.f));
@@ -58,7 +58,9 @@ void RRT::draw(Framework* fw, Vec3 color, bool drawObs) {
 		}
 	}
 	//draw solution
-	fw->draw_solution(mSolutionPath);
+	fw->draw_solution(mSolutionPath, solutionColor);
+
+	if (drawDist) fw->draw_dist(5.f, means.x(), means.y(), sxx, syy, sxy, distColor);
 }
 
 Vec2 RRT::randConfEven() {
@@ -69,30 +71,6 @@ Vec2 RRT::randConfEven() {
 }
 
 Vec2 RRT::randConfDist(Vec2 means, float sxx, float syy, float sxy) {
-	/*normal_distribution<> dx{ means.x(), sxx };
-	normal_distribution<> dy{ means.y(), syy };
-	random_device rd{};
-	mt19937 gen{ rd() };
-
-	float a = dx(gen);
-	float b = dy(gen);
-	Eigen::VectorXd v(2);
-	v(0) = a;
-	v(1) = b;
-	Eigen::MatrixXd A(2, 2);
-	A(0, 0) = sxx;
-	A(0, 1) = sxy;
-	A(1, 0) = sxy;
-	A(1, 1) = syy;
-	Eigen::MatrixXd L(A.llt().matrixL());
-	Eigen::MatrixXd S = A.sqrt();
-	Eigen::VectorXd solution = L * v;
-	Eigen::VectorXd solution1 = S * v;
-	Vec2 sample = Vec2(solution(0), solution(1));
-	Vec2 sample1 = Vec2(solution1(0), solution1(1));
-	sample = sample + means;
-
-	return sample;*/
 	normal_distribution<> dx{ means.x(), sxx };
 	normal_distribution<> dy{ means.y(), syy };
 	random_device rd{};

@@ -576,6 +576,11 @@ float Vec2::y() {
 	return mData[1][0];
 }
 
+bool Vec2::operator==(const Vec2& m) const {
+	if (mData[0][0] == m.mData[0][0] && mData[1][0] == m.mData[1][0]) return true;
+	return false;
+}
+
 
 Vec3::Vec3() : Vec(3) {}
 

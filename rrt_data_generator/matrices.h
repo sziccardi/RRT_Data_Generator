@@ -132,6 +132,7 @@ public:
 	string getType() {
 		return "Vec2";
 	}
+	bool operator==(const Vec2& m) const;
 };
 
 //Conversions
