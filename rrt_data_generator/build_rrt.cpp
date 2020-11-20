@@ -251,7 +251,8 @@ void RRT::letsBuildRRTStar() {
 
 		//rewire
 		for (auto it : myTree->getList()) {
-			if (!intersects(it.second->mPosition, newNode->mPosition) && it.second->mParent != nullptr && it.second->mParent->mCost > newNode->mCost) {
+			if (toVec(it.second->mPosition - newNode->mPosition).length() < mRRTStarNeihborhood &&
+				!intersects(it.second->mPosition, newNode->mPosition) && it.second->mParent != nullptr && it.second->mParent->mCost > newNode->mCost) {
 				Node* oldParent = it.second->mParent;
 				//remove me from the connected list
 				oldParent->mConnectedNodes.erase(std::remove(oldParent->mConnectedNodes.begin(), oldParent->mConnectedNodes.end(), it.second), oldParent->mConnectedNodes.end());

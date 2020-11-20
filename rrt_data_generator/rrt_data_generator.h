@@ -26,7 +26,7 @@ int mPercentToDraw = 2;
 
 ofstream mDataResultFile;
 
-void makeNewRRT();
+void makeNewRRT(bool draw = false);
 pair<int, float> testRRT(Framework* fw, Vec2 randStart, Vec2 randGoal, Vec2 obs1Pos, float obs1Rad, Vec2 obs2Pos, float obs2Rad, Vec2 obs3Pos, float obs3Rad, Vec2 obs4Pos, float obs4Rad, bool draw);
 pair<int, float> sampleRRTOnDistribution(Framework* fw, Vec2 randStart, Vec2 randGoal, Vec2 obs1Pos, float obs1Rad, Vec2 obs2Pos, float obs2Rad, Vec2 obs3Pos, float obs3Rad, Vec2 obs4Pos, float obs4Rad, Vec2 means, float xVar, float yVar, float xyVar, bool draw);
 void testTheThing();

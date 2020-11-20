@@ -4,7 +4,7 @@ void drawRRT(RRT* theRRT) {
 
 }
 
-void makeNewRRT() {
+void makeNewRRT(bool draw) {
 	Vec2 randStart = Vec2(0.f, rand() % (int)mConfSpaceHeight);
 	Vec2 randGoal = Vec2(mConfSpaceWidth, rand() % (int)mConfSpaceHeight);
 	mDataCsvFile << randStart.x() << "," << randStart.y() << "," << randGoal.x() << "," << randGoal.y();
@@ -70,6 +70,29 @@ void makeNewRRT() {
 	mDataCsvFile << sXX << ",";
 	mDataCsvFile << sYY << ",";
 	mDataCsvFile << sXY;
+
+	if (draw) {
+		Framework* framework = new Framework(600, 600);;
+		myRRT->draw(framework, Vec3(0.f, 1.f, 0.f), Vec3(0.f, 1.f, 1.f), true);
+
+		//show
+		std::stringstream sstm;
+		sstm << "output/rrtStar.png";
+		framework->present_render();
+		const char* thing = sstm.str().c_str();
+		framework->save_img(thing);
+
+		SDL_Event event = SDL_Event();    // Event variable
+
+		// Below while loop checks if the window has terminated using close in the
+		//  corner.
+		//event.type = SDL_QUIT;
+		while (!(event.type == SDL_QUIT)) {
+			SDL_Delay(10);  // setting some Delay
+			SDL_PollEvent(&event);  // Catching the poll event.
+		}
+		delete(framework);
+	}
 
 	delete(myRRT);
 }
@@ -362,7 +385,7 @@ void testTheThing() {
 }
 
 void generateData(string dataFile) {
-	mDataCsvFile.open(dataFile, ios::app);
+	mDataCsvFile.open(dataFile);
 	//set up headings
 	mHeadings.clear();
 	mHeadings.push_back("\"Start Loc X\"");
@@ -381,17 +404,17 @@ void generateData(string dataFile) {
 	mHeadings.push_back("\"Predicted SYY\"");
 	mHeadings.push_back("\"Predicted SXY\"");
 
-	//for (int j = 0; j < mHeadings.size(); ++j) {
-	//	mDataCsvFile << mHeadings.at(j);
-	//	if (j != mHeadings.size() - 1) {
-	//		mDataCsvFile << ","; // No comma at end of line
-	//	}
-	//}
-	//mDataCsvFile << endl;
+	for (int j = 0; j < mHeadings.size(); ++j) {
+		mDataCsvFile << mHeadings.at(j);
+		if (j != mHeadings.size() - 1) {
+			mDataCsvFile << ","; // No comma at end of line
+		}
+	}
+	mDataCsvFile << endl;
 
-	for (int i = 129; i < mNumDataPoints; i++) {
+	for (int i = 0; i < mNumDataPoints; i++) {
 		cout << "making situation " << i << " : ";
-		makeNewRRT();
+		makeNewRRT(false);
 		mDataCsvFile << endl;
 
 	}
