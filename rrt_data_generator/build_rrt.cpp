@@ -173,6 +173,54 @@ Vec2 RRT::newConf(Vec2 nearby, Vec2 rand) {
 	return toVec2(res);
 }
 
+bool RRT::intersects(Vec2 pos1, Vec2 pos2) {
+	//is it the same point?
+	Vec2 diffVec = toVec2(pos1 - pos2);
+	if (diffVec.length() <= 1.0) {
+		return false;
+	}
+
+	// parameterization
+	// circle: (x - center.x)^2 + (y - center.y)^2 = r^2
+	// line: x = diffVec.mX * t + near.mX
+	// line: y = diffVec.mY * t + near.mY
+	// min possible t = 0 max possible t  = 1 for segment
+	float tMin = 1;
+	for (auto obstacle : mObstacles) {
+		//what if the segment starts in the obstacle?
+		if (toVec(obstacle.first - pos1).length() <= obstacle.second) {
+			return true;
+		}
+
+		float a = diffVec.length() * diffVec.length();
+		float b = -2 * toVec(pos1 - obstacle.first).dot(diffVec);
+		float c = toVec(pos1 - obstacle.first).length() * toVec(pos1 - obstacle.first).length() - obstacle.second * obstacle.second;
+
+		float d = b * b - 4 * a * c;
+		if (d > 0.0) {
+			//intersections possible
+			float tPlus = (-b + sqrt(d)) / (2 * a);
+			float tMinus = (-b - sqrt(d)) / (2 * a);
+
+			if (tPlus <= 1 && tPlus >= 0) {
+				//real intersection! 
+				if (tPlus < tMin) {
+					return true;
+				}
+			}
+
+			if (tMinus <= 1 && tMinus >= 0) {
+				//real intersection! 
+				if (tMinus < tMin) {
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
 void RRT::letsBuildRRTStarOnDist(Vec2 means, float sxx, float syy, float sxy) {
 
 }
@@ -200,6 +248,20 @@ void RRT::letsBuildRRTStar() {
 			myTree->addVertex(newNode);
 			myTree->addEdge(nearNode, newNode);
 		}
+
+		//rewire
+		for (auto it : myTree->getList()) {
+			if (!intersects(it.second->mPosition, newNode->mPosition) && it.second->mParent != nullptr && it.second->mParent->mCost > newNode->mCost) {
+				Node* oldParent = it.second->mParent;
+				//remove me from the connected list
+				oldParent->mConnectedNodes.erase(std::remove(oldParent->mConnectedNodes.begin(), oldParent->mConnectedNodes.end(), it.second), oldParent->mConnectedNodes.end());
+
+				//change the parent
+				it.second->mParent = newNode;
+				newNode->mConnectedNodes.push_back(it.second);
+			}
+		}
+
 	}
 	mSolutionPath.clear();
 	if (count > mCountMax) {

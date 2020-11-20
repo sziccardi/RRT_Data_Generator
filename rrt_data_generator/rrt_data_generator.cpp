@@ -362,7 +362,7 @@ void testTheThing() {
 }
 
 void generateData(string dataFile) {
-	mDataCsvFile.open(dataFile, fstream::app);
+	mDataCsvFile.open(dataFile, ios::app);
 	//set up headings
 	mHeadings.clear();
 	mHeadings.push_back("\"Start Loc X\"");
@@ -387,9 +387,9 @@ void generateData(string dataFile) {
 	//		mDataCsvFile << ","; // No comma at end of line
 	//	}
 	//}
-	mDataCsvFile << endl;
+	//mDataCsvFile << endl;
 
-	for (int i = 4518; i < mNumDataPoints; i++) {
+	for (int i = 129; i < mNumDataPoints; i++) {
 		cout << "making situation " << i << " : ";
 		makeNewRRT();
 		mDataCsvFile << endl;
@@ -409,7 +409,7 @@ void testDataDistAndNonDist(string outputFileName) {
 }
 
 int main(int argc, char* argv[]) {
-	generateData("rrtStar_no_rewiring_data.csv");
+	generateData("rrtStar_data.csv");
 	//testDataDistAndNonDist("rrt_test_result_data.csv");
 	
 	return 0;

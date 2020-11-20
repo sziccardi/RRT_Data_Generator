@@ -51,6 +51,7 @@ private:
 	Node* nearestNode(Vec2 rand);
 	Node* cheapestNode(Vec2 rand);
 	Vec2 newConf(Vec2 nearby, Vec2 rand);
+	bool intersects(Vec2 thing1, Vec2 thing2);
 
 	void letsBuildRRTStarOnDist(Vec2 means, float sxx, float syy, float sxy);
 	void letsBuildRRTStar();
