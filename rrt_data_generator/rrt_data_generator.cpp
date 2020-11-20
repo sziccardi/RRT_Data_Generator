@@ -27,40 +27,51 @@ void makeNewRRT() {
 		mDataCsvFile << randObstacle.x() << "," << randObstacle.y() << "," << radius << ",";
 		myRRT->addObstacle(randObstacle, radius);
 	}
-	auto solution = myRRT->start();
+	//auto solution = myRRT->start();
+	auto solution = myRRT->start(true);
 
 	float numSamples = (float)solution.size();
-	float xMean = 0.f;
-	float yMean = 0.f;
-	for (auto point : solution) {
-		xMean += point.x();
-		yMean += point.y();
+	float xMean = -1.f;
+	float yMean = -1.f;
+	if (numSamples > 0) {
+		xMean = 0.f;
+		yMean = 0.f;
+		for (auto point : solution) {
+			xMean += point.x();
+			yMean += point.y();
+		}
+		xMean /= numSamples;
+		yMean /= numSamples;
 	}
-	xMean /= numSamples;
-	yMean /= numSamples;
 	mDataCsvFile << xMean << ",";
 	mDataCsvFile << yMean << ",";
 
 
-	float sXY = 0.f;
-	float sXX = 0.f;
-	float sYY = 0.f;
-	for (auto point : solution) {
-		float xVar = point.x() - xMean;
-		float yVar = point.y() - yMean;
+	float sXY = -1.f;
+	float sXX = -1.f;
+	float sYY = -1.f;
+	if (numSamples > 0) {
+		sXY = 0.f;
+		sXX = 0.f;
+		sYY = 0.f;
+		for (auto point : solution) {
+			float xVar = point.x() - xMean;
+			float yVar = point.y() - yMean;
 
-		sXY += (xVar * yVar);
-		sXX += (xVar * xVar);
-		sYY += (yVar * yVar);
+			sXY += (xVar * yVar);
+			sXX += (xVar * xVar);
+			sYY += (yVar * yVar);
+		}
+
+		sXY /= (numSamples - 1);
+		sXX /= (numSamples - 1);
+		sYY /= (numSamples - 1);
 	}
-
-	sXY /= (numSamples - 1);
-	sXX /= (numSamples - 1);
-	sYY /= (numSamples - 1);
-
 	mDataCsvFile << sXX << ",";
 	mDataCsvFile << sYY << ",";
 	mDataCsvFile << sXY;
+
+	delete(myRRT);
 }
 
 pair<int, float> testRRT(Framework* fw, Vec2 randStart, Vec2 randGoal, Vec2 obs1Pos, float obs1Rad, Vec2 obs2Pos, float obs2Rad, Vec2 obs3Pos, float obs3Rad, Vec2 obs4Pos, float obs4Rad, bool draw) {
@@ -74,7 +85,8 @@ pair<int, float> testRRT(Framework* fw, Vec2 randStart, Vec2 randGoal, Vec2 obs1
 		float calcPercentCovered = ((M_PI * obs1Rad * obs1Rad) + (M_PI * obs2Rad * obs2Rad) + (M_PI * obs3Rad * obs3Rad) + (M_PI * obs4Rad * obs4Rad)) / (600 * 600);
 		mDataResultFile << calcPercentCovered << ",";
 
-		auto solution = myRRT->start();
+		//auto solution = myRRT->start();
+		auto solution = myRRT->start(true);
 		int numNodes = myRRT->getNumNodes();
 		mDataResultFile << to_string(numNodes) << ",";
 
@@ -106,7 +118,8 @@ pair<int, float> sampleRRTOnDistribution(Framework* fw, Vec2 randStart, Vec2 ran
 	myRRT->addObstacle(obs3Pos, obs3Rad);
 	myRRT->addObstacle(obs4Pos, obs4Rad);
 
-	auto solution = myRRT->start(means, xVar, yVar, xyVar);
+	//auto solution = myRRT->start(means, xVar, yVar, xyVar);
+	auto solution = myRRT->start(means, xVar, yVar, xyVar, true);
 	int numNodes = myRRT->getNumNodes();
 	mDataResultFile << to_string(numNodes) << ",";
 
@@ -349,7 +362,7 @@ void testTheThing() {
 }
 
 void generateData(string dataFile) {
-	mDataCsvFile.open(dataFile);
+	mDataCsvFile.open(dataFile, fstream::app);
 	//set up headings
 	mHeadings.clear();
 	mHeadings.push_back("\"Start Loc X\"");
@@ -369,17 +382,14 @@ void generateData(string dataFile) {
 	mHeadings.push_back("\"Predicted SXY\"");
 
 	//for (int j = 0; j < mHeadings.size(); ++j) {
-	//	mDataTxtFile << mHeadings.at(j);
 	//	mDataCsvFile << mHeadings.at(j);
 	//	if (j != mHeadings.size() - 1) {
 	//		mDataCsvFile << ","; // No comma at end of line
-	//		mDataTxtFile << ","; // No comma at end of line
 	//	}
 	//}
-	//mDataCsvFile << endl;
-	//mDataTxtFile << endl;
+	mDataCsvFile << endl;
 
-	for (int i = 0; i < mNumDataPoints; i++) {
+	for (int i = 4518; i < mNumDataPoints; i++) {
 		cout << "making situation " << i << " : ";
 		makeNewRRT();
 		mDataCsvFile << endl;
@@ -399,8 +409,8 @@ void testDataDistAndNonDist(string outputFileName) {
 }
 
 int main(int argc, char* argv[]) {
-	generateData("rrt_data.csv");
-	testDataDistAndNonDist("rrt_test_result_data.csv");
+	generateData("rrtStar_no_rewiring_data.csv");
+	//testDataDistAndNonDist("rrt_test_result_data.csv");
 	
 	return 0;
 }

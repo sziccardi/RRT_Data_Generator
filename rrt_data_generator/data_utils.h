@@ -26,7 +26,7 @@ namespace std {
 
 class Node { 
 public:
-	Node(Vec2 position, Node* parent);
+	Node(Vec2 position, float newCost, Node* parent);
 	~Node();
 
 	void addConnection(Node* newNode);
@@ -34,6 +34,7 @@ public:
 	Node* mParent = nullptr;
 	Vec2 mPosition = Vec2(-1, -1);
 	vector<Node*> mConnectedNodes;
+	float mCost = -1.f;
 };
 
 class Tree {
@@ -49,6 +50,7 @@ public:
 	void addEdge(Node* source, Node* destination);
 	unordered_map<Vec2, Node*> getList();
 	Node* getNearestNode(Vec2 pointC);
+	Node* getCheapestNode(int neighborhoodRadius, Vec2 pointC);
 	int getTreeSize();
 };
 

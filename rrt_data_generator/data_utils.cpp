@@ -14,25 +14,28 @@ std::size_t hash<Vec2>::operator()(const Vec2& k) const
 		^ (hash<float>()(k.mData[1][0]) << 1)) >> 1);
 }
 
-Node::Node(Vec2 position, Node* parent) {
+Node::Node(Vec2 position, float newCost, Node* parent) {
 	mPosition = position;
 	mParent = parent;
+	if (parent) mCost = newCost + parent->mCost;
+	else mCost = newCost;
 }
 
 Node::~Node() {
-		if (mParent) {
+		/*if (mParent) {
 			auto p = mParent;
 			delete(p);
 			mParent = nullptr;
-		}
-		for (auto it = mConnectedNodes.begin(); it != mConnectedNodes.end(); ) {
+		}*/
+		mParent = nullptr;
+		/*for (auto it = mConnectedNodes.begin(); it != mConnectedNodes.end(); ) {
 			if (true) {
 				delete * it;
 				it = mConnectedNodes.erase(it);
 			} else {
 				++it;
 			}
-		}
+		}*/
 		mConnectedNodes.clear();
 	}
 
@@ -86,7 +89,7 @@ void Tree::addEdge(Node* source, Node* destination) {
 
 Node* Tree::getNearestNode(Vec2 pointC) {
 	float delta = 10000000000000.;
-	Node* nearest = new Node(Vec2(-1, -1), nullptr);
+	Node* nearest = new Node(Vec2(-1, -1), -1.f, nullptr);
 	for (auto myPair : myList) {
 		auto actualPos = Vec2(myPair.first.mData[0][0], myPair.first.mData[1][0]);
 		float tempDelta = toVec2(actualPos - pointC).length();
@@ -96,6 +99,20 @@ Node* Tree::getNearestNode(Vec2 pointC) {
 		}
 	}
 	return nearest;
+}
+
+Node* Tree::getCheapestNode(int neighborhoodRadius, Vec2 pointC) {
+	float cost = 10000000000000.;
+	Node* cheapest = new Node(Vec2(-1, -1), -1.f, nullptr);
+	for (auto myPair : myList) {
+		auto actualPos = Vec2(myPair.first.mData[0][0], myPair.first.mData[1][0]);
+		float tempDelta = toVec2(actualPos - pointC).length();
+		if (tempDelta < neighborhoodRadius && myPair.second->mCost < cost) {
+			cost = myPair.second->mCost;
+			cheapest = myPair.second;
+		}
+	}
+	return cheapest;
 }
 
 int Tree::getTreeSize() { return myList.size(); }

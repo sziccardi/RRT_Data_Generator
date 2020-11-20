@@ -16,7 +16,7 @@ vector<string> mHeadings;
 float mConfSpaceWidth = 600;
 float mConfSpaceHeight = 600;
 
-int mNumDataPoints = 0; //max is 2788 apparently
+int mNumDataPoints = 5000; //max is 2788 apparently
 
 int mNumObstacles = 4;
 float mMinObstacleRadius = 10.f;

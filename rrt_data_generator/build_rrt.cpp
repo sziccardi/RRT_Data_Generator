@@ -14,6 +14,14 @@ RRT::RRT(int confWidth, int confHeight, Vec2 startPos, Vec2 goalPos, int numVert
 	return;
 }
 
+RRT::~RRT() {
+	if (myTree) {
+		auto t = myTree;
+		delete(t);
+		myTree = nullptr;
+	}
+}
+
 Vec2 RRT::getInitPos() { return mInitPos; }
 void RRT::setInitPos(Vec2 initPos) { mInitPos = initPos; }
 
@@ -34,13 +42,21 @@ void RRT::addObstacle(Vec2 pos, float radius) {
 	mObstacles.push_back(make_pair(pos, radius));
 }
 
-vector<Vec2> RRT::start() {
-	letsBuildRRT();
+vector<Vec2> RRT::start(bool useStar) {
+	if (useStar) {
+		letsBuildRRTStar();
+	} else {
+		letsBuildRRT();
+	}
 	return mSolutionPath;
 }
 
-vector<Vec2> RRT::start(Vec2 means, float sxx, float syy, float sxy) {
-	letsBuildRRTOnDist(means, sxx, syy, sxy);
+vector<Vec2> RRT::start(Vec2 means, float sxx, float syy, float sxy, bool useStar) {
+	if (useStar) {
+		letsBuildRRTStar();
+	} else {
+		letsBuildRRTOnDist(means, sxx, syy, sxy);
+	}
 	return mSolutionPath;
 }
 
@@ -98,6 +114,13 @@ Node* RRT::nearestNode(Vec2 rand) {
 	return myNode;
 }
 
+Node* RRT::cheapestNode(Vec2 rand) {
+	//loop through all points nearby in the graph and find the cheapest one to the rand pos
+	auto myNode = myTree->getCheapestNode(mRRTStarNeihborhood, rand);
+
+	return myNode;
+}
+
 Vec2 RRT::newConf(Vec2 nearby, Vec2 rand) {
 	//the new point is as far along the near-rand vector as you can
 	//if we cant step that way at all, return a failed value (-1, -1)
@@ -150,8 +173,53 @@ Vec2 RRT::newConf(Vec2 nearby, Vec2 rand) {
 	return toVec2(res);
 }
 
+void RRT::letsBuildRRTStarOnDist(Vec2 means, float sxx, float syy, float sxy) {
+
+}
+
+void RRT::letsBuildRRTStar() {
+	Node* newNode = new Node(mInitPos, 0.f, nullptr);
+	int count = 0;
+	while (toVec(mGoalPos - newNode->mPosition).length() > 10.f) {
+		if (count > mCountMax) break;
+		count++;
+
+		Vec2 randPos = Vec2(-1, -1);
+		if (rand() % 100 < 10) {
+			randPos = mGoalPos;
+		}
+		else {
+			randPos = randConfEven();
+		}
+
+		Node* nearNode = cheapestNode(randPos);
+		Vec2 tempNewPos = newConf(nearNode->mPosition, randPos);
+
+		if (nearNode->mPosition.x() >= 0 && tempNewPos.x() > 0) {
+			newNode = new Node(tempNewPos, toVec(tempNewPos - nearNode->mPosition).length(), nearNode);
+			myTree->addVertex(newNode);
+			myTree->addEdge(nearNode, newNode);
+		}
+	}
+	mSolutionPath.clear();
+	if (count > mCountMax) {
+		cout << "Couldn't find a solution... So saaaad" << endl;
+	}
+	else {
+		cout << "Found a solution! Yay go you!" << endl;
+		mSolutionPath.push_back(newNode->mPosition);
+		while (abs(newNode->mPosition.x() - mInitPos.x()) > 1.0 || abs(newNode->mPosition.y() - mInitPos.y()) > 1.0) {
+			if (newNode->mParent == nullptr) {
+				break;
+			}
+			newNode = newNode->mParent;
+			mSolutionPath.push_back(newNode->mPosition);
+		}
+	}
+}
+
 void RRT::letsBuildRRT() {
-	Node* newNode = new Node(mInitPos, nullptr);
+	Node* newNode = new Node(mInitPos, 0.f, nullptr);
 	int count = 0;
 	while (toVec(mGoalPos - newNode->mPosition).length() > 10.f) {
 		if (count > mCountMax) break;
@@ -168,7 +236,7 @@ void RRT::letsBuildRRT() {
 		Vec2 tempNewPos = newConf(nearNode->mPosition, randPos);
 
 		if (tempNewPos.x() > 0) {
-			newNode = new Node(tempNewPos, nearNode);
+			newNode = new Node(tempNewPos, toVec(tempNewPos - nearNode->mPosition).length(), nearNode);
 			myTree->addVertex(newNode);
 			myTree->addEdge(nearNode, newNode);
 		}
@@ -191,7 +259,7 @@ void RRT::letsBuildRRT() {
 }
 
 void RRT::letsBuildRRTOnDist(Vec2 means, float sxx, float syy, float sxy) {
-	Node* newNode = new Node(mInitPos, nullptr);
+	Node* newNode = new Node(mInitPos, 0.f, nullptr);
 	bool useDist = (means.x() > 0 && means.y() > 0);
 	Eigen::Vector2f mean(2);
 	mean(0) = means.x();
@@ -223,7 +291,7 @@ void RRT::letsBuildRRTOnDist(Vec2 means, float sxx, float syy, float sxy) {
 		Vec2 tempNewPos = newConf(nearNode->mPosition, randPos);
 
 		if (tempNewPos.x() > 0) {
-			newNode = new Node(tempNewPos, nearNode);
+			newNode = new Node(tempNewPos, toVec(tempNewPos - nearNode->mPosition).length(), nearNode);
 			myTree->addVertex(newNode);
 			myTree->addEdge(nearNode, newNode);
 		}
@@ -244,31 +312,8 @@ void RRT::letsBuildRRTOnDist(Vec2 means, float sxx, float syy, float sxy) {
 	}
 }
 
-/*void drawSolutionPath() {
-	Vec2 oldPos = Vec2(-1.0, -1.0);
-	for (Node* node : mSolutionPath) {
-		if (oldPos.x() > 0) {
-			fill(255, 0, 0);
-			strokeWeight(5);
-			line(oldPos.x(), oldPos.y(), pos.mPosition.x(), pos.mPosition.y());
-		}
-		oldPos = node->mPosition;
-	}
-	line(oldPos.x(), oldPos.y(), mInitPos.x(), mInitPos.y());
-	strokeWeight(1);
-}*/
-
-/*void drawObstacles() {
-	for (Vec2 obstacle : mObstacles) {
-		fill(255, 50);
-		ellipse(obstacle.x(), obstacle.y(), mObstacleRadius * 2, mObstacleRadius * 2);
-	}
-}*/
-
 void RRT::initEnvironment() {
-	//mInitPos = new Vec2(0.0, height / 2.0);
-	//mGoalPos = new Vec2(width / 1.0, height / 2.0);
-	Node* initNode = new Node(mInitPos, nullptr);
+	Node* initNode = new Node(mInitPos, 0.f, nullptr);
 	if (myTree) {
 		auto t = myTree;
 		delete(t);
@@ -276,57 +321,6 @@ void RRT::initEnvironment() {
 	}
 	myTree = new Tree();
 	myTree->addVertex(initNode);
-	/*Vec2 randPos; = randConf();
-	Vec2 newPos = Vec2(-1.0, -1.0);
-	while (newPos.x() < 0) {
-		newPos = newConf(mInitPos, randPos);
-	}
-	Node* newNode = new Node(newPos, initNode);
-	myTree->addVertex(newNode);
-	myTree->addEdge(initNode, newNode);*/
 }
 
-//void draw() {
-//	background(51);
-
-//	//draw start button
-//	fill(0);
-//	rect(20, 20, 20, 20);
-
-//	if (mInitPos.x() >= 0) {
-//		//draw start place
-//		fill(255, 0, 0);
-//		ellipse(mInitPos.x(), mInitPos.y(), 15, 15);
-//	}
-//	if (mGoalPos.x() >= 0) {
-//		//draw end place
-//		fill(255, 0, 0);
-//		ellipse(mGoalPos.x(), mGoalPos.y(), 15, 15);
-//	}
-//	myTree.drawTree();
-//	drawObstacles();
-//	drawSolutionPath();
-//}
-
-//void mouseClicked() {
-//	if (mouseX > 20 && mouseX < 40 && mouseY > 20 && mouseY < 40) {
-//		print("STARTING\n");
-//		initEnvironment();
-//		letsBuildRRT();
-//	} else {
-//		//place obstacles 
-//		print("PLACING OBSTACLE\n");
-//		Vec2 newThing = new Vec2((float)mouseX, (float)mouseY);
-//		boolean canPlace = true;
-//		for (Vec2 obstacle : mObstacles) {
-//			if ((newThing.vecSubtract(obstacle)).veclength() < 2) {
-//				canPlace = false;
-//				break;
-//			}
-//		}
-//		if (canPlace) {
-//			mObstacles.add(newThing);
-//		}
-//	}
-//}
 

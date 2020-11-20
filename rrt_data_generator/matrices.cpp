@@ -33,7 +33,7 @@ Matrix::Matrix(int width, int height, std::vector<std::vector<float>> data) {
 
 //deconstructor
 Matrix::~Matrix() {
-	for (int i = 0; i < mNumRows; i++) {
+	for (int i = 0; i < mData.size(); i++) {
 		mData[i].clear();
 	}
 	mData.clear();

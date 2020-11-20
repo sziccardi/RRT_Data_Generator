@@ -16,6 +16,8 @@ public:
 	RRT();
 	RRT(int confWidth, int confHeight, Vec2 startPos, Vec2 goalPos, int numVerts);
 
+	~RRT();
+
 	Vec2 getInitPos();
 	void setInitPos(Vec2 initPos);
 
@@ -33,22 +35,25 @@ public:
 	int getIsSuccessful();
 
 	void addObstacle(Vec2 pos, float radius);
-	vector<Vec2> start();
 
-	vector<Vec2> start(Vec2 means, float sxx, float syy, float sxy);
+	vector<Vec2> start(bool useRRTStar = false);
+	vector<Vec2> start(Vec2 means, float sxx, float syy, float sxy, bool useRRTStar = false);
 
 	void draw(Framework* fw, Vec3 solutionColor, Vec3 treeColor, bool drawObs, bool drawDist = false, Vec3 distColor = Vec3(-1.f, -1.f, -1.f), Vec2 means = Vec2(-1.f, -1.f), float sxx = -1.f, float syy = -1.f, float sxy = -1.f);
 
 	bool mUseDist = false;
-	int mCountMax = 10000;
+	int mCountMax = 1000;
 
 private:
 	Vec2 randConfEven();
 	Vec2 randConfDist(Vec2 means = Vec2(-1, -1), float sxx = -1, float syy = -1, float sxy = -1);
 
 	Node* nearestNode(Vec2 rand);
+	Node* cheapestNode(Vec2 rand);
 	Vec2 newConf(Vec2 nearby, Vec2 rand);
 
+	void letsBuildRRTStarOnDist(Vec2 means, float sxx, float syy, float sxy);
+	void letsBuildRRTStar();
 	void letsBuildRRTOnDist(Vec2 means, float sxx, float syy, float sxy);
 	void letsBuildRRT();
 	void initEnvironment();
@@ -62,4 +67,6 @@ private:
 	float dq = 10;
 	int mWidth = 0;
 	int mHeight = 0;
+
+	int mRRTStarNeihborhood = 100.f;
 };
