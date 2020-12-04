@@ -79,13 +79,6 @@ Vec2 RRT::randConfDist(Vec2 means, float sxx, float syy, float sxy) {
 	return sample;
 }
 
-//Vec2 nearestPixel(Vec2 rand) {
-//  //loop through all points in the graph and find the one closest to the rand pos
-//  Vec2 myPos = myTree.getNearestPoint(rand);
-
-//  return myPos;
-//}
-
 Node* RRT::nearestNode(Vec2 rand) {
 	//loop through all points in the graph and find the one closest to the rand pos
 	auto myNode = myTree->getNearestNode(rand);
@@ -230,7 +223,7 @@ void RRT::letsBuildRRTStar() {
 				!intersects(it.second->mPosition, newNode->mPosition) && it.second->mParent != nullptr && it.second->mParent->mCost > newNode->mCost) {
 				Node* oldParent = it.second->mParent;
 				//remove me from the connected list
-				oldParent->mConnectedNodes.erase(std::remove(oldParent->mConnectedNodes.begin(), oldParent->mConnectedNodes.end(), it.second), oldParent->mConnectedNodes.end());
+				oldParent->mConnectedNodes.erase(remove(oldParent->mConnectedNodes.begin(), oldParent->mConnectedNodes.end(), it.second), oldParent->mConnectedNodes.end());
 
 				//change the parent
 				it.second->mParent = newNode;
@@ -242,8 +235,7 @@ void RRT::letsBuildRRTStar() {
 	mSolutionPath.clear();
 	if (count > mCountMax) {
 		cout << "Couldn't find a solution... So saaaad" << endl;
-	}
-	else {
+	} else {
 		cout << "Found a solution! Yay go you!" << endl;
 		mSolutionPath.push_back(newNode->mPosition);
 		while (abs(newNode->mPosition.x() - mInitPos.x()) > 1.0 || abs(newNode->mPosition.y() - mInitPos.y()) > 1.0) {
@@ -282,8 +274,7 @@ void RRT::letsBuildRRT() {
 	mSolutionPath.clear();
 	if (count > mCountMax) {
 		cout << "Couldn't find a solution... So saaaad" << endl;
-	}
-	else {
+	} else {
 		cout << "Found a solution! Yay go you!" << endl;
 		mSolutionPath.push_back(newNode->mPosition);
 		while (abs(newNode->mPosition.x() - mInitPos.x()) > 1.0 || abs(newNode->mPosition.y() - mInitPos.y()) > 1.0) {
