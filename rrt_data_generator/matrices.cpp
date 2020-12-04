@@ -315,19 +315,19 @@ void Matrix::mult(float s) {
 	}
 }
 
-Matrix& Matrix::times(float s) {
-	Matrix* temp = new Matrix(mNumCols, mNumRows, mData);
+Matrix Matrix::times(float s) {
+	Matrix temp = Matrix(mNumCols, mNumRows, mData);
 	for (int i = 0; i < mNumRows; i++) {
 		for (int j = 0; j < mNumCols; j++) {
-			temp->mData[i][j] *= s;
+			temp.mData[i][j] *= s;
 		}
 	}
-	return (*temp);
+	return (temp);
 }
 
 void Matrix::mult(Matrix & m) {
 	if (width() == m.height()) {
-		Matrix* temp = new Matrix(m.mNumCols, mNumRows, mData);
+		Matrix temp = Matrix(m.mNumCols, mNumRows, mData);
 		mData.clear();
 		mData.resize(m.height());
 		for (int i = 0; i < m.height(); i++) {
@@ -335,7 +335,7 @@ void Matrix::mult(Matrix & m) {
 			for (int j = 0; j < mNumCols; j++) {
 				float sum = 0;
 				for (int k = 0; k < width(); k++) {
-					sum += temp->mData[i][k] * m.mData[k][j];
+					sum += temp.mData[i][k] * m.mData[k][j];
 				}
 				setVal(i, j, sum);
 			}
@@ -345,23 +345,23 @@ void Matrix::mult(Matrix & m) {
 	}
 }
 
-Matrix & Matrix::times(Matrix & m) {
+Matrix Matrix::times(Matrix & m) {
 	if (width() == m.height()) {
-		Matrix* temp = new Matrix(m.width(), mNumRows, mData);
+		Matrix temp = Matrix(m.width(), mNumRows, mData);
 		for (int i = 0; i < mNumRows; i++) {
 			for (int j = 0; j < m.width(); j++) {
 				float sum = 0;
 				for (int k = 0; k < width(); k++) {
 					sum += mData[i][k] * m.mData[k][j];
 				}
-				temp->setVal(i, j, sum);
+				temp.setVal(i, j, sum);
 			}
 		}
-		return (*temp);
+		return (temp);
 	} else {
 		cout << "CAN'T MULTIPLY THESE MATRICES TOGETHER" << endl;
-		Matrix* emptyThing = new Matrix();
-		return (*emptyThing);
+		Matrix emptyThing = Matrix();
+		return (emptyThing);
 	}
 }
 
@@ -377,18 +377,18 @@ void Matrix::add(const Matrix& m) {
 	}
 }
 
-Matrix& Matrix::plus(const Matrix& m) {
-	Matrix* temp = new Matrix(mNumCols, mNumRows, mData);
+Matrix Matrix::plus(const Matrix& m) {
+	Matrix temp = Matrix(mNumCols, mNumRows, mData);
 	if (mNumRows == m.mNumRows && mNumCols == m.mNumCols) {
 		for (int i = 0; i < mNumRows; i++) {
 			for (int j = 0; j < mNumCols; j++) {
-				temp->mData[i][j] += m.mData[i][j];
+				temp.mData[i][j] += m.mData[i][j];
 			}
 		}
 	} else {
 		cout << "COULD NOT ADD MATRICES, SIZE MISMATCH" << endl;
 	}
-	return (*temp);
+	return (temp);
 }
 
 void Matrix::subtract(const Matrix& m) {
@@ -403,18 +403,18 @@ void Matrix::subtract(const Matrix& m) {
 	}
 }
 
-Matrix& Matrix::minus(const Matrix& m) {
-	Matrix* temp = new Matrix(mNumCols, mNumRows, mData);
+Matrix Matrix::minus(const Matrix& m) {
+	Matrix temp = Matrix(mNumCols, mNumRows, mData);
 	if (mNumRows == m.mNumRows && mNumCols == m.mNumCols) {
 		for (int i = 0; i < mNumRows; i++) {
 			for (int j = 0; j < mNumCols; j++) {
-				temp->mData[i][j] -= m.mData[i][j];
+				temp.mData[i][j] -= m.mData[i][j];
 			}
 		}
 	} else {
 		cout << "COULD NOT SUBTRACT MATRICES, SIZE MISMATCH" << endl;
 	}
-	return (*temp);
+	return temp;
 }
 
 Identity::Identity(int size) : Matrix(size, size) {
