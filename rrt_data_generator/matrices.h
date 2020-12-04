@@ -59,13 +59,13 @@ protected:
 
 
 	void mult(float s);
-	Matrix& times(float s);
+	Matrix times(float s);
 	void mult(Matrix& m);
-	Matrix& times(Matrix& m);
+	Matrix times(Matrix& m);
 	void add(const Matrix& m);
-	Matrix& plus(const Matrix& m);
+	Matrix plus(const Matrix& m);
 	void subtract(const Matrix& m);
-	Matrix& minus(const Matrix& m);
+	Matrix minus(const Matrix& m);
 
 };
 

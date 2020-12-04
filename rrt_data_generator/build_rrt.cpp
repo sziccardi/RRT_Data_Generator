@@ -54,29 +54,8 @@ vector<Vec2> RRT::start(bool useStar) {
 vector<Vec2> RRT::start(Vec2 means, float sxx, float syy, float sxy, bool useStar) {
 	if (useStar) {
 		letsBuildRRTStar();
-	} else {
-		letsBuildRRTOnDist(means, sxx, syy, sxy);
-	}
+	} 
 	return mSolutionPath;
-}
-
-void RRT::draw(Framework* fw, Vec3 solutionColor, Vec3 treeColor, bool drawObs, bool drawDist, Vec3 distColor, Vec2 means, float sxx, float syy, float sxy) {
-
-	//draw the tree
-	fw->draw_tree(myTree, treeColor);
-	// Calling the function that draws circle.
-	if (drawObs) {
-		fw->draw_circle(mInitPos.x(), mInitPos.y(), 5, Vec3(255.f, 0.f, 0.f));
-		fw->draw_circle(mGoalPos.x(), mGoalPos.y(), 5, Vec3(255.f, 0.f, 0.f));
-
-		for (auto obs : mObstacles) {
-			fw->draw_circle(obs.first.x(), obs.first.y(), obs.second, Vec3(0.f, 0.f, 255.f));
-		}
-	}
-	//draw solution
-	fw->draw_solution(mSolutionPath, solutionColor);
-
-	if (drawDist) fw->draw_dist(5.f, means.x(), means.y(), sxx, syy, sxy, distColor);
 }
 
 Vec2 RRT::randConfEven() {
@@ -221,10 +200,6 @@ bool RRT::intersects(Vec2 pos1, Vec2 pos2) {
 	return false;
 }
 
-void RRT::letsBuildRRTStarOnDist(Vec2 means, float sxx, float syy, float sxy) {
-
-}
-
 void RRT::letsBuildRRTStar() {
 	Node* newNode = new Node(mInitPos, 0.f, nullptr);
 	int count = 0;
@@ -309,60 +284,6 @@ void RRT::letsBuildRRT() {
 		cout << "Couldn't find a solution... So saaaad" << endl;
 	}
 	else {
-		cout << "Found a solution! Yay go you!" << endl;
-		mSolutionPath.push_back(newNode->mPosition);
-		while (abs(newNode->mPosition.x() - mInitPos.x()) > 1.0 || abs(newNode->mPosition.y() - mInitPos.y()) > 1.0) {
-			if (newNode->mParent == nullptr) {
-				break;
-			}
-			newNode = newNode->mParent;
-			mSolutionPath.push_back(newNode->mPosition);
-		}
-	}
-}
-
-void RRT::letsBuildRRTOnDist(Vec2 means, float sxx, float syy, float sxy) {
-	Node* newNode = new Node(mInitPos, 0.f, nullptr);
-	bool useDist = (means.x() > 0 && means.y() > 0);
-	Eigen::Vector2f mean(2);
-	mean(0) = means.x();
-	mean(1) = means.y();
-	Eigen::Matrix2f covar(2, 2);
-	covar(0, 0) = sxx;
-	covar(0, 1) = sxy;
-	covar(1, 0) = sxy;
-	covar(1, 1) = syy;
-	Eigen::EigenMultivariateNormal<float> normX_solver1(mean, covar);
-	int count = 0;
-	while (toVec(mGoalPos - newNode->mPosition).length() > 10.f) {
-
-		if (count > mCountMax) break;
-		count++;
-
-		Vec2 randPos = Vec2(-1, -1);
-		if (means.x() > 0 && means.y() > 0) {
-			if (rand() % 100 < 10) {
-				randPos = mGoalPos;
-			} else {
-				auto sample = normX_solver1.samples(1);
-				randPos = Vec2(sample(0, 0), sample(1, 0));
-			}
-			//cout << "chose " << randPos.x() << ", " << randPos.y() << endl;
-		}
-
-		Node* nearNode = nearestNode(randPos);
-		Vec2 tempNewPos = newConf(nearNode->mPosition, randPos);
-
-		if (tempNewPos.x() > 0) {
-			newNode = new Node(tempNewPos, toVec(tempNewPos - nearNode->mPosition).length(), nearNode);
-			myTree->addVertex(newNode);
-			myTree->addEdge(nearNode, newNode);
-		}
-	}
-	mSolutionPath.clear();
-	if (count > mCountMax) {
-		cout << "Couldn't find a solution... So saaaad" << endl;
-	} else {
 		cout << "Found a solution! Yay go you!" << endl;
 		mSolutionPath.push_back(newNode->mPosition);
 		while (abs(newNode->mPosition.x() - mInitPos.x()) > 1.0 || abs(newNode->mPosition.y() - mInitPos.y()) > 1.0) {

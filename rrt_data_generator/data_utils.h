@@ -6,16 +6,6 @@
 
 #include "matrices.h"
 
-#include <SDL.h>
-#include <SDL_Image.h>
-
-#include <unsupported/Eigen/MatrixFunctions>
-#include <Eigen/src/Cholesky/LLT.h>
-#include <Eigen/Dense>
-#include <Eigen/Core>
-#include <Eigen/Eigen>
-#include "eigenmvn.h"
-
 using namespace std;
 
 namespace std {
@@ -54,21 +44,4 @@ public:
 	int getTreeSize();
 };
 
-class Framework {
-public:
-	Framework(int height_, int width_);
-	~Framework();
 
-	void draw_circle(int center_x, int center_y, int radius_, Vec3 color);
-	void draw_tree(Tree* myTree, Vec3 color);
-	void draw_solution(vector<Vec2> solution, Vec3 color);
-	void draw_dist(float chiSquareVal, float meanX, float meanY, float sXX, float sYY, float sXY, Vec3 color);
-	void present_render();
-	void save_img(const char* imgName);
-
-private:
-	int height;     // Height of the window
-	int width;      // Width of the window
-	SDL_Renderer* renderer = NULL;      // Pointer for the renderer
-	SDL_Window* window = NULL;      // Pointer for the window
-};
