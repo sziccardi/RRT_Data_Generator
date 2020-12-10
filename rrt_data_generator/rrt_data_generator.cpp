@@ -172,7 +172,7 @@ pair<int, float> sampleRRTOnDistribution(Framework* fw, Vec2 randStart, Vec2 ran
 
 void testTheThing() {
 	ifstream testData;
-	testData.open("rrt_data_predicted_4obs.csv");
+	testData.open("rrtStar_output.csv");
 	if (!testData.is_open()) {
 		std::cout << "Could not open file" << endl;
 		return;
@@ -183,10 +183,10 @@ void testTheThing() {
 
 
 	// Read the column names
-	if (testData.good()) {
-		// Extract the first line in the file
-		getline(testData, line);
-	}
+	//if (testData.good()) {
+	//	// Extract the first line in the file
+	//	getline(testData, line);
+	//}
 	//mDataResultFile << endl;
 	int count = 0;
 	std::string buffer;
@@ -346,7 +346,7 @@ void testTheThing() {
 			//show
 			if (todraw) {
 				std::stringstream sstm;
-				sstm << "output/" << count << "_dist.png";
+				sstm << "output/" << count << "rrtStar_dist.png";
 				framework->present_render();
 				const char* thing = sstm.str().c_str();
 				framework->save_img(thing);
@@ -432,8 +432,8 @@ void testDataDistAndNonDist(string outputFileName) {
 }
 
 int main(int argc, char* argv[]) {
-	generateData("rrtStar_data.csv");
-	//testDataDistAndNonDist("rrt_test_result_data.csv");
+	//generateData("rrtStar_data.csv");
+	testDataDistAndNonDist("rrtStar_test_result_data.csv");
 	
 	return 0;
 }
