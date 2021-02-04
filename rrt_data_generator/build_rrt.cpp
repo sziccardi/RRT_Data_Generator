@@ -53,17 +53,24 @@ vector<Vec2> RRT::start(bool useStar) {
 
 vector<Vec2> RRT::start(Vec2 means, float sxx, float syy, float sxy, bool useStar) {
 	if (useStar) {
-		letsBuildRRTStar();
+		letsBuildRRTStarOnDist(means, sxx, syy, sxy);
 	} else {
 		letsBuildRRTOnDist(means, sxx, syy, sxy);
 	}
 	return mSolutionPath;
 }
 
-void RRT::draw(Framework* fw, Vec3 solutionColor, Vec3 treeColor, bool drawObs, bool drawDist, Vec3 distColor, Vec2 means, float sxx, float syy, float sxy) {
+void RRT::draw(Framework* fw, Vec3 solutionColor, Vec3 treeColor, bool drawTree, bool drawObs, bool drawDist, Vec3 distColor, Vec2 means, float sxx, float syy, float sxy) {
 
-	//draw the tree
-	fw->draw_tree(myTree, treeColor);
+	//draw the tree or samples
+	if (drawTree) {
+		fw->draw_tree(myTree, treeColor);
+	}
+	else {
+		for (auto it : mOrigSamples) {
+			fw->draw_circle(it.x(), it.y(), 1, toVec3(treeColor*255.f));
+		}
+	}
 	// Calling the function that draws circle.
 	if (drawObs) {
 		fw->draw_circle(mInitPos.x(), mInitPos.y(), 5, Vec3(255.f, 0.f, 0.f));
@@ -222,7 +229,71 @@ bool RRT::intersects(Vec2 pos1, Vec2 pos2) {
 }
 
 void RRT::letsBuildRRTStarOnDist(Vec2 means, float sxx, float syy, float sxy) {
+	Node* newNode = new Node(mInitPos, 0.f, nullptr);
+	Eigen::Vector2f mean(2);
+	mean(0) = means.x();
+	mean(1) = means.y();
+	Eigen::Matrix2f covar(2, 2);
+	covar(0, 0) = sxx;
+	covar(0, 1) = sxy;
+	covar(1, 0) = sxy;
+	covar(1, 1) = syy;
+	Eigen::EigenMultivariateNormal<float> normX_solver1(mean, covar);
+	int count = 0;
+	while (toVec(mGoalPos - newNode->mPosition).length() > 10.f) {
+		if (count > mCountMax) break;
+		count++;
 
+		Vec2 randPos = Vec2(-1, -1);
+		if (rand() % 100 < 10) {
+			randPos = mGoalPos;
+		}
+		else {
+			auto sample = normX_solver1.samples(1);
+			randPos = Vec2(sample(0, 0), sample(1, 0));
+		}
+
+		mOrigSamples.push_back(randPos);
+
+		Node* nearNode = cheapestNode(randPos);
+		Vec2 tempNewPos = newConf(nearNode->mPosition, randPos);
+
+		if (nearNode->mPosition.x() >= 0 && tempNewPos.x() > 0) {
+			newNode = new Node(tempNewPos, toVec(tempNewPos - nearNode->mPosition).length(), nearNode);
+			myTree->addVertex(newNode);
+			myTree->addEdge(nearNode, newNode);
+		}
+
+		//rewire
+		for (auto it : myTree->getList()) {
+			if (toVec(it.second->mPosition - newNode->mPosition).length() < mRRTStarNeihborhood &&
+				!intersects(it.second->mPosition, newNode->mPosition) && it.second->mParent != nullptr && it.second->mParent->mCost > newNode->mCost) {
+				Node* oldParent = it.second->mParent;
+				//remove me from the connected list
+				oldParent->mConnectedNodes.erase(std::remove(oldParent->mConnectedNodes.begin(), oldParent->mConnectedNodes.end(), it.second), oldParent->mConnectedNodes.end());
+
+				//change the parent
+				it.second->mParent = newNode;
+				newNode->mConnectedNodes.push_back(it.second);
+			}
+		}
+
+	}
+	mSolutionPath.clear();
+	if (count > mCountMax) {
+		cout << "Couldn't find a solution... So saaaad" << endl;
+	}
+	else {
+		cout << "Found a solution! Yay go you!" << endl;
+		mSolutionPath.push_back(newNode->mPosition);
+		while (abs(newNode->mPosition.x() - mInitPos.x()) > 1.0 || abs(newNode->mPosition.y() - mInitPos.y()) > 1.0) {
+			if (newNode->mParent == nullptr) {
+				break;
+			}
+			newNode = newNode->mParent;
+			mSolutionPath.push_back(newNode->mPosition);
+		}
+	}
 }
 
 void RRT::letsBuildRRTStar() {
@@ -239,6 +310,8 @@ void RRT::letsBuildRRTStar() {
 		else {
 			randPos = randConfEven();
 		}
+		
+		mOrigSamples.push_back(randPos);
 
 		Node* nearNode = cheapestNode(randPos);
 		Vec2 tempNewPos = newConf(nearNode->mPosition, randPos);

@@ -30,5 +30,6 @@ void makeNewRRT(bool draw = false);
 pair<int, float> testRRT(Framework* fw, Vec2 randStart, Vec2 randGoal, Vec2 obs1Pos, float obs1Rad, Vec2 obs2Pos, float obs2Rad, Vec2 obs3Pos, float obs3Rad, Vec2 obs4Pos, float obs4Rad, bool draw);
 pair<int, float> sampleRRTOnDistribution(Framework* fw, Vec2 randStart, Vec2 randGoal, Vec2 obs1Pos, float obs1Rad, Vec2 obs2Pos, float obs2Rad, Vec2 obs3Pos, float obs3Rad, Vec2 obs4Pos, float obs4Rad, Vec2 means, float xVar, float yVar, float xyVar, bool draw);
 void testTheThing();
+void testSingleSituation(Vec2 startPos, Vec2 endPos, Vec2 obs1Pos, float obs1Rad, Vec2 obs2Pos, float obs2Rad, Vec2 obs3Pos, float obs3Rad, Vec2 obs4Pos, float obs4Rad, float xVar, float yVar, float xyVar, Vec2 means);
 void generateData(string dataFile);
 void testDataDistAndNonDist(string outputFileName);

@@ -73,7 +73,7 @@ void makeNewRRT(bool draw) {
 
 	if (draw) {
 		Framework* framework = new Framework(600, 600);;
-		myRRT->draw(framework, Vec3(0.f, 1.f, 0.f), Vec3(0.f, 1.f, 1.f), true);
+		myRRT->draw(framework, Vec3(0.f, 1.f, 0.f), Vec3(0.f, 1.f, 1.f), false, true);
 
 		//show
 		std::stringstream sstm;
@@ -125,7 +125,7 @@ pair<int, float> testRRT(Framework* fw, Vec2 randStart, Vec2 randGoal, Vec2 obs1
 		mDataResultFile << to_string(totalDist) << ",";
 
 		if (draw) {
-			myRRT->draw(fw, Vec3(0.f, 1.f, 0.f), Vec3(0.f, 1.f, 1.f), true);
+			myRRT->draw(fw, Vec3(0.f, 1.f, 0.f), Vec3(0.f, 1.f, 1.f), false, true);
 		}
 
 		//TODO:write solution size to file
@@ -159,10 +159,10 @@ pair<int, float> sampleRRTOnDistribution(Framework* fw, Vec2 randStart, Vec2 ran
 	bool successful = myRRT->getIsSuccessful();
 	mDataResultFile << successful << ",";
 	if (!successful) {
-		myRRT->draw(fw, Vec3(1.0f, 0.f, 1.f), Vec3(0.5f, 0.f, 1.f), false, true, Vec3(1.f, 0.f, 0.f), means, xVar, yVar, xyVar);
+		myRRT->draw(fw, Vec3(1.0f, 0.f, 1.f), Vec3(0.5f, 0.f, 1.f), false, false, true, Vec3(1.f, 0.f, 0.f), means, xVar, yVar, xyVar);
 	}
 	else if (draw) {
-		myRRT->draw(fw, Vec3(1.0f, 0.f, 1.f), Vec3(0.5f, 0.f, 1.f), false, true, Vec3(1.f, 0.f, 0.f), means, xVar, yVar, xyVar);
+		myRRT->draw(fw, Vec3(1.0f, 0.f, 1.f), Vec3(0.5f, 0.f, 1.f), false, false, true, Vec3(1.f, 0.f, 0.f), means, xVar, yVar, xyVar);
 	}
 	//TODO:write solution size to file
 	if (!myRRT->getIsSuccessful()) numNodes = -1;
@@ -172,7 +172,7 @@ pair<int, float> sampleRRTOnDistribution(Framework* fw, Vec2 randStart, Vec2 ran
 
 void testTheThing() {
 	ifstream testData;
-	testData.open("rrtStar_output.csv");
+	testData.open("rrt__data_output.csv");
 	if (!testData.is_open()) {
 		std::cout << "Could not open file" << endl;
 		return;
@@ -384,6 +384,38 @@ void testTheThing() {
 	testData.close();
 }
 
+void testSingleSituation(Vec2 startPos, Vec2 endPos, Vec2 obs1Pos, float obs1Rad, Vec2 obs2Pos, float obs2Rad, Vec2 obs3Pos, float obs3Rad, Vec2 obs4Pos, float obs4Rad, float xVar, float yVar, float xyVar, Vec2 means) {
+	Framework* framework = new Framework(600, 600);;
+
+	//returns num nodes sampled, path length
+	pair<int, float> withoutDistNum = testRRT(framework, startPos, endPos, obs1Pos, obs1Rad, obs2Pos, obs2Rad, obs3Pos, obs3Rad, obs4Pos, obs4Rad, true);
+	pair<int, float> withDistNum = sampleRRTOnDistribution(framework, startPos, endPos, obs1Pos, obs1Rad, obs2Pos, obs2Rad, obs3Pos, obs3Rad, obs4Pos, obs4Rad, means, xVar, yVar, xyVar, true);
+	bool successful = (withDistNum.first >= 0);
+
+	int nodediff = withDistNum.first - withoutDistNum.first;
+	float nodepercentDecrease = (float)nodediff / (float)withDistNum.first;
+
+	float pathdiff = withDistNum.second - withoutDistNum.second;
+	float pathpercentDecrease = (float)pathdiff / (float)withDistNum.second;
+
+	std::stringstream sstm;
+	sstm << "output/rrtStar_single_test_dist.png";
+	framework->present_render();
+	const char* thing = sstm.str().c_str();
+	framework->save_img(thing);
+
+	SDL_Event event = SDL_Event();    // Event variable
+
+			// Below while loop checks if the window has terminated using close in the
+			//  corner.
+	event.type = SDL_QUIT;
+	while (!(event.type == SDL_QUIT)) {
+		SDL_Delay(10);  // setting some Delay
+		SDL_PollEvent(&event);  // Catching the poll event.
+	}
+	delete(framework);
+}
+
 void generateData(string dataFile) {
 	mDataCsvFile.open(dataFile);
 	//set up headings
@@ -434,6 +466,6 @@ void testDataDistAndNonDist(string outputFileName) {
 int main(int argc, char* argv[]) {
 	//generateData("rrtStar_data.csv");
 	testDataDistAndNonDist("rrtStar_test_result_data.csv");
-	
+	//testSingleSituation(Vec2(0.f, 577.f), Vec2(600, 37), Vec2(189, 281), 64, Vec2(538, 177), 57, Vec2(101, 116), 11, Vec2(332, 153), 64, 56016.698f, 19942.537f, -33294.187f, Vec2(305.158f, 285.741));
 	return 0;
 }

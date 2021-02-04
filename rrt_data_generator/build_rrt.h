@@ -39,7 +39,7 @@ public:
 	vector<Vec2> start(bool useRRTStar = false);
 	vector<Vec2> start(Vec2 means, float sxx, float syy, float sxy, bool useRRTStar = false);
 
-	void draw(Framework* fw, Vec3 solutionColor, Vec3 treeColor, bool drawObs, bool drawDist = false, Vec3 distColor = Vec3(-1.f, -1.f, -1.f), Vec2 means = Vec2(-1.f, -1.f), float sxx = -1.f, float syy = -1.f, float sxy = -1.f);
+	void draw(Framework* fw, Vec3 solutionColor, Vec3 treeColor, bool drawTree, bool drawObs, bool drawDist = false, Vec3 distColor = Vec3(-1.f, -1.f, -1.f), Vec2 means = Vec2(-1.f, -1.f), float sxx = -1.f, float syy = -1.f, float sxy = -1.f);
 
 	bool mUseDist = false;
 	int mCountMax = 1000;
@@ -62,6 +62,7 @@ private:
 	int mNumVertices = 154;
 	Tree* myTree;
 	vector<Vec2> mSolutionPath;
+	vector<Vec2> mOrigSamples;
 	Vec2 mInitPos = Vec2(-1.0, -1.0);
 	Vec2 mGoalPos = Vec2(-1.0, -1.0);
 	vector<pair<Vec2, float>> mObstacles;
