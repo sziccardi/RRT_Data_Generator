@@ -4,31 +4,67 @@ void drawRRT(RRT* theRRT) {
 
 }
 
-void makeNewRRT(bool draw) {
+void makeNewRRT(bool draw, bool alongTheWay) {
 	Vec2 randStart = Vec2(0.f, rand() % (int)mConfSpaceHeight);
 	Vec2 randGoal = Vec2(mConfSpaceWidth, rand() % (int)mConfSpaceHeight);
-	mDataCsvFile << randStart.x() << "," << randStart.y() << "," << randGoal.x() << "," << randGoal.y();
-	if (mNumObstacles > 0) {
-		mDataCsvFile << ",";
-	}
+	
 	RRT* myRRT = new RRT(mConfSpaceWidth, mConfSpaceHeight, randStart, randGoal, 150);
+	vector<std::pair<Vec2, float>> obstacles;
 
 	int actualNumObs = rand() % (mNumObstacles + 1);
 	int actualNumNoObs = mNumObstacles - actualNumObs;
 	for (int i = 0; i < actualNumObs; i++) {
 		float radius = rand() % (int)(mMaxObstacleRadius - mMinObstacleRadius) + mMinObstacleRadius;
 		Vec2 randObstacle = Vec2(rand() % (int)(mConfSpaceWidth - 2 * radius) + radius, rand() % (int)(mConfSpaceHeight - 2 * radius) + radius);
-		mDataCsvFile << randObstacle.x() << "," << randObstacle.y() << "," << radius << ",";
+		obstacles.push_back(std::make_pair(randObstacle, radius));
 		myRRT->addObstacle(randObstacle, radius);
 	}
 	for (int i = 0; i < actualNumNoObs; i++) {
 		float radius = 0.f;
 		Vec2 randObstacle = Vec2(rand() % (int)(mConfSpaceWidth - 2 * radius) + radius, rand() % (int)(mConfSpaceHeight - 2 * radius) + radius);
-		mDataCsvFile << randObstacle.x() << "," << randObstacle.y() << "," << radius << ",";
+		obstacles.push_back(std::make_pair(randObstacle, radius));
 		myRRT->addObstacle(randObstacle, radius);
 	}
-	//auto solution = myRRT->start();
+	
 	auto solution = myRRT->start(true);
+	std::reverse(solution.begin(), solution.end());
+	if (alongTheWay) recordAlongTheWayInfo(randStart, randGoal, obstacles, solution);
+	else recordSampleInfo(randStart, randGoal, obstacles, solution);
+
+	if (draw) {
+		Framework* framework = new Framework(600, 600);;
+		myRRT->draw(framework, Vec3(0.f, 1.f, 0.f), Vec3(0.f, 1.f, 1.f), false, true);
+
+		//show
+		std::stringstream sstm;
+		sstm << "output/rrtStar.png";
+		framework->present_render();
+		const char* thing = sstm.str().c_str();
+		framework->save_img(thing);
+
+		SDL_Event event = SDL_Event();    // Event variable
+
+		// Below while loop checks if the window has terminated using close in the
+		//  corner.
+		//event.type = SDL_QUIT;
+		while (!(event.type == SDL_QUIT)) {
+			SDL_Delay(10);  // setting some Delay
+			SDL_PollEvent(&event);  // Catching the poll event.
+		}
+		delete(framework);
+	}
+
+	delete(myRRT);
+}
+
+void recordSampleInfo(Vec2 start, Vec2 end, vector<std::pair<Vec2, float>> obstacles, vector<Vec2> solution) {
+	mDataCsvFile << start.x() << "," << start.y() << "," << end.x() << "," << end.y();
+	if (mNumObstacles > 0) {
+		mDataCsvFile << ",";
+	}
+	for (auto obs : obstacles) {
+		mDataCsvFile << obs.first.x() << "," << obs.first.y() << "," << obs.second << ",";
+	}
 
 	float numSamples = (float)solution.size();
 	float xMean = -1.f;
@@ -70,31 +106,52 @@ void makeNewRRT(bool draw) {
 	mDataCsvFile << sXX << ",";
 	mDataCsvFile << sYY << ",";
 	mDataCsvFile << sXY;
+	mDataCsvFile << endl;
+}
 
-	if (draw) {
-		Framework* framework = new Framework(600, 600);;
-		myRRT->draw(framework, Vec3(0.f, 1.f, 0.f), Vec3(0.f, 1.f, 1.f), false, true);
-
-		//show
-		std::stringstream sstm;
-		sstm << "output/rrtStar.png";
-		framework->present_render();
-		const char* thing = sstm.str().c_str();
-		framework->save_img(thing);
-
-		SDL_Event event = SDL_Event();    // Event variable
-
-		// Below while loop checks if the window has terminated using close in the
-		//  corner.
-		//event.type = SDL_QUIT;
-		while (!(event.type == SDL_QUIT)) {
-			SDL_Delay(10);  // setting some Delay
-			SDL_PollEvent(&event);  // Catching the poll event.
-		}
-		delete(framework);
+void recordAlongTheWayInfo(Vec2 start, Vec2 end, vector<std::pair<Vec2, float>> obstacles, vector<Vec2> solution) {
+	if (solution.size() < 3) {
+		cout << "solution too small!! not useful to save" << endl;
 	}
-
-	delete(myRRT);
+	else if (solution.size() < 10) {
+		//cout << "solution is too small! sampling instead" << endl;
+		mDataCsvFile << start.x() << "," << start.y() << "," << end.x() << "," << end.y();
+		if (mNumObstacles > 0) {
+			mDataCsvFile << ",";
+		}
+		for (auto obs : obstacles) {
+			mDataCsvFile << obs.first.x() << "," << obs.first.y() << "," << obs.second << ",";
+		}
+		vector<int> selected;
+		for (int i = 0; i < 10; i++) {
+			selected.push_back(rand() % solution.size());
+		}
+		std::sort(selected.begin(), selected.end());
+		for (auto i : selected) {
+			mDataCsvFile << solution[i].x() << "," << solution[i].y();
+			if (selected.begin() + i != (selected.end() - 1)) {
+				mDataCsvFile << ",";
+			}
+		}
+		mDataCsvFile << endl;
+	}
+	else {
+		for (int i = 4; i < solution.size() - 5; i++) {
+			mDataCsvFile << start.x() << "," << start.y() << "," << end.x() << "," << end.y();
+			if (mNumObstacles > 0) {
+				mDataCsvFile << ",";
+			}
+			for (auto obs : obstacles) {
+				mDataCsvFile << obs.first.x() << "," << obs.first.y() << "," << obs.second << ",";
+			}
+			for (int j = i - 4; j < i + 6; j++) {
+				mDataCsvFile << solution[j].x() << "," << solution[j].y();
+				if (j != i + 5)
+					mDataCsvFile << ",";
+			}
+			mDataCsvFile << endl;
+		}
+	}
 }
 
 pair<int, float> testRRT(Framework* fw, Vec2 randStart, Vec2 randGoal, Vec2 obs1Pos, float obs1Rad, Vec2 obs2Pos, float obs2Rad, Vec2 obs3Pos, float obs3Rad, Vec2 obs4Pos, float obs4Rad, bool draw) {
@@ -408,7 +465,7 @@ void testSingleSituation(Vec2 startPos, Vec2 endPos, Vec2 obs1Pos, float obs1Rad
 
 			// Below while loop checks if the window has terminated using close in the
 			//  corner.
-	event.type = SDL_QUIT;
+	//event.type = SDL_QUIT;
 	while (!(event.type == SDL_QUIT)) {
 		SDL_Delay(10);  // setting some Delay
 		SDL_PollEvent(&event);  // Catching the poll event.
@@ -416,7 +473,7 @@ void testSingleSituation(Vec2 startPos, Vec2 endPos, Vec2 obs1Pos, float obs1Rad
 	delete(framework);
 }
 
-void generateData(string dataFile) {
+void generateData(string dataFile, bool alongTheWay) {
 	mDataCsvFile.open(dataFile);
 	//set up headings
 	mHeadings.clear();
@@ -430,11 +487,23 @@ void generateData(string dataFile) {
 		mHeadings.push_back("\"Obstacle " + to_string(i + 1) + " Radius\"");
 	}
 
-	mHeadings.push_back("\"Predicted Mean X\"");
-	mHeadings.push_back("\"Predicted Mean Y\"");
-	mHeadings.push_back("\"Predicted SXX\"");
-	mHeadings.push_back("\"Predicted SYY\"");
-	mHeadings.push_back("\"Predicted SXY\"");
+	if (alongTheWay) {
+		for (int i = 0; i < 5; i++) {
+			mHeadings.push_back("\"Prev Sample " + to_string(i + 1) + " X\"");
+			mHeadings.push_back("\"Prev Sample " + to_string(i + 1) + " Y\"");
+		}
+		for (int i = 0; i < 5; i++) {
+			mHeadings.push_back("\"Next Sample " + to_string(i + 1) + " X\"");
+			mHeadings.push_back("\"Next Sample " + to_string(i + 1) + " Y\"");
+		}
+	}
+	else {
+		mHeadings.push_back("\"Predicted Mean X\"");
+		mHeadings.push_back("\"Predicted Mean Y\"");
+		mHeadings.push_back("\"Predicted SXX\"");
+		mHeadings.push_back("\"Predicted SYY\"");
+		mHeadings.push_back("\"Predicted SXY\"");
+	}
 
 	for (int j = 0; j < mHeadings.size(); ++j) {
 		mDataCsvFile << mHeadings.at(j);
@@ -446,8 +515,8 @@ void generateData(string dataFile) {
 
 	for (int i = 0; i < mNumDataPoints; i++) {
 		cout << "making situation " << i << " : ";
-		makeNewRRT(false);
-		mDataCsvFile << endl;
+		makeNewRRT(false, alongTheWay);
+		//mDataCsvFile << endl;
 
 	}
 
@@ -464,8 +533,8 @@ void testDataDistAndNonDist(string outputFileName) {
 }
 
 int main(int argc, char* argv[]) {
-	//generateData("rrtStar_data.csv");
-	testDataDistAndNonDist("rrtStar_test_result_data.csv");
+	generateData("data/rrtStar_predit_next.csv", true);
+	//testDataDistAndNonDist("rrtStar_test_result_data.csv");
 	//testSingleSituation(Vec2(0.f, 577.f), Vec2(600, 37), Vec2(189, 281), 64, Vec2(538, 177), 57, Vec2(101, 116), 11, Vec2(332, 153), 64, 56016.698f, 19942.537f, -33294.187f, Vec2(305.158f, 285.741));
 	return 0;
 }
