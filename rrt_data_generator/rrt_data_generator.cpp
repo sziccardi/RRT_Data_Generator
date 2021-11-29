@@ -115,10 +115,8 @@ void recordAlongTheWayInfo(Vec2 start, Vec2 end, vector<std::pair<Vec2, float>> 
 	}
 	else if (solution.size() < 10) {
 		//cout << "solution is too small! sampling instead" << endl;
-		mDataCsvFile << start.x() << "," << start.y() << "," << end.x() << "," << end.y();
-		if (mNumObstacles > 0) {
-			mDataCsvFile << ",";
-		}
+		mDataCsvFile << start.x() << "," << start.y() << "," << end.x() << "," << end.y() << ",";
+	
 		for (auto obs : obstacles) {
 			mDataCsvFile << obs.first.x() << "," << obs.first.y() << "," << obs.second << ",";
 		}
@@ -127,9 +125,10 @@ void recordAlongTheWayInfo(Vec2 start, Vec2 end, vector<std::pair<Vec2, float>> 
 			selected.push_back(rand() % solution.size());
 		}
 		std::sort(selected.begin(), selected.end());
-		for (auto i : selected) {
+		for (int j = 0; j < selected.size(); j++) {
+			int i = selected[j];
 			mDataCsvFile << solution[i].x() << "," << solution[i].y();
-			if (selected.begin() + i != (selected.end() - 1)) {
+			if (selected.begin() + j != (selected.end() - 1)) {
 				mDataCsvFile << ",";
 			}
 		}
@@ -137,17 +136,16 @@ void recordAlongTheWayInfo(Vec2 start, Vec2 end, vector<std::pair<Vec2, float>> 
 	}
 	else {
 		for (int i = 4; i < solution.size() - 5; i++) {
-			mDataCsvFile << start.x() << "," << start.y() << "," << end.x() << "," << end.y();
-			if (mNumObstacles > 0) {
-				mDataCsvFile << ",";
-			}
+			mDataCsvFile << start.x() << "," << start.y() << "," << end.x() << "," << end.y() << ",";
+		
 			for (auto obs : obstacles) {
 				mDataCsvFile << obs.first.x() << "," << obs.first.y() << "," << obs.second << ",";
 			}
 			for (int j = i - 4; j < i + 6; j++) {
 				mDataCsvFile << solution[j].x() << "," << solution[j].y();
-				if (j != i + 5)
-					mDataCsvFile << ",";
+				if (j != i + 5) {
+						mDataCsvFile << ",";
+				}
 			}
 			mDataCsvFile << endl;
 		}
